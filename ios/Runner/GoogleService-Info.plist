@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>859383331914-479239fvfp8hgmrshj424ufkmdhpc4bs.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.859383331914-479239fvfp8hgmrshj424ufkmdhpc4bs</string>
+	<key>API_KEY</key>
+	<string>AIzaSyC4MC3X9xyGr92vmBPHWeWJCCgP8aylllI</string>
+	<key>GCM_SENDER_ID</key>
+	<string>859383331914</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.checkpointGeofence</string>
+	<key>PROJECT_ID</key>
+	<string>marathon-35ffa</string>
+	<key>STORAGE_BUCKET</key>
+	<string>marathon-35ffa.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:859383331914:ios:f06659698e49d8e23e3ab3</string>
+</dict>
+</plist>
