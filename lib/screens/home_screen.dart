@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:checkpoint_geofence/screens/map_screen.dart';
+import 'package:checkpoint_geofence/screens/distance_screen.dart';
 
 import 'map_screen.dart';
 import 'distance_screen.dart';
@@ -15,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _children = [
   MapScreen(),
-  //DistanceScreen(),
+  DistanceScreen(),
   //LeaderboardScreen(),
   //FinisherScreen(),
 ];

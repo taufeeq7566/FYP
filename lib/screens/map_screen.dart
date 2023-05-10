@@ -70,31 +70,41 @@ class _MapScreenState extends State<MapScreen> {
     _listenForGeofenceEvents();
   }
 
-  void _listenForGeofenceEvents() {
-    final collectionReference = FirebaseFirestore.instance.collection('geofence');
-    final stream = geo.collection(collectionRef: collectionReference).within(
-      center: geo.point(latitude: _currentPosition.latitude, longitude: _currentPosition.longitude),
-      radius: 50.0, // in meters
-    );
-    stream.listen((List<DocumentSnapshot> documentList) {
-      documentList.forEach((DocumentSnapshot document) {
-        final data = document.data();
-        final checkpointId = data['data']['checkpointId'];
-        final isVisited = data['data']['isVisited'];
-        if (!isVisited) {
-          final checkpointRef = FirebaseFirestore.instance.collection('checkpoints').doc(checkpointId);
-          checkpointRef.update({'isVisited': true});
-        }
-      });
+void _listenForGeofenceEvents() {
+  final collectionReference = FirebaseFirestore.instance.collection('geofence');
+  final stream = geo.collection(collectionRef: collectionReference).within(
+    center: geo.point(latitude: _currentPosition.latitude, longitude: _currentPosition.longitude),
+    radius: 50.0, field: '', // in meters
+  );
+  stream.listen((List<DocumentSnapshot> documentList) {
+    documentList.forEach((DocumentSnapshot document) {
+      final data = document.data() as Map<String, dynamic>; // Cast data to Map<String, dynamic>
+      final checkpointId = data['data']?['checkpointId']; // Add null checks here
+      final isVisited = data['data']?['isVisited']; // Add null checks here
+      if (checkpointId != null && isVisited != null && !isVisited) {
+        final checkpointRef = FirebaseFirestore.instance.collection('checkpoints').doc(checkpointId);
+        checkpointRef.update({'isVisited': true});
+      }
     });
-  }
+  });
+}
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Map Screen'),
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Map Screen'),
+    ),
+    body: GoogleMap(
+      initialCameraPosition: CameraPosition(
+        target: LatLng(_currentPosition.latitude, _currentPosition.longitude),
+        zoom: 15,
       ),
-      body: GoogleMap(
-        initialCameraPosition: CameraPosition(
-          target: LatLng(_currentPosition.latitude, _currentPosition.longitude),
+      onMapCreated: (GoogleMapController controller) {
+        _controller.complete(controller);
+      },
+      markers: _markers,
+    ),
+  );
+}
+}
