@@ -47,6 +47,9 @@ dependencies:
   geoflutterfire: 3.0.3
   
 
+  geoflutterfire: 3.0.3
+  
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
