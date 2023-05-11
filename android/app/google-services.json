@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "859383331914",
+    "project_id": "marathon-35ffa",
+    "storage_bucket": "marathon-35ffa.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:859383331914:android:74b3ba23e7aeac1a3e3ab3",
+        "android_client_info": {
+          "package_name": "com.example.checkpoint_geofence"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "859383331914-f5j9rh57b686tvetev13s1ron32uqe2t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDwR4pRq2UZjTeYLsl7EJtbKCbGCCp2pkg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "859383331914-f5j9rh57b686tvetev13s1ron32uqe2t.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "859383331914-479239fvfp8hgmrshj424ufkmdhpc4bs.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.checkpointGeofence"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
