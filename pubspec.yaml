@@ -42,6 +42,7 @@ dependencies:
   google_maps_flutter: ^2.2.5
   rxdart: ^0.27.7
   firebase_core: ^1.10.2
+  firebase_core_platform_interface: 4.5.1
   flutter_local_notifications: ^14.0.0+1
 
   geoflutterfire: 3.0.3
