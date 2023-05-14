@@ -46,6 +46,7 @@ dependencies:
   flutter_local_notifications: ^14.0.0+1
 
   geoflutterfire: 3.0.3
+  geoflutterfire2: ^2.3.12
   
   
 
