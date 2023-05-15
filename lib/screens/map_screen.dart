@@ -50,8 +50,8 @@ class _MapScreenState extends State<MapScreen> {
         markers: _markers,
         initialCameraPosition: CameraPosition(
           target: LatLng(
-            _currentPosition.latitude,
-            _currentPosition.longitude,
+            2.273664, //temporary coordinate
+            102.446846,
           ),
           zoom: 15,
         ),
