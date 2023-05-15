@@ -31,16 +31,3 @@ subprojects {
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
-
-android{
-    compileSdkVersion localProperties.getProperty('flutter.compileSdkVersion').toInteger()
-
-    compileOptions{
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompabitlity JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions{
-        jvmTarget = '1.8'
-    }
-}

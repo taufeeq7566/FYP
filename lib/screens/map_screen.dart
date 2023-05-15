@@ -50,9 +50,9 @@ class _MapScreenState extends State<MapScreen> {
         markers: _markers,
         initialCameraPosition: CameraPosition(
           target: LatLng(
-            2.273664, //temporary coordinate
-            102.446846,
-          ),
+            2.273664,
+            102.446846
+          ), //temporary coordinate
           zoom: 15,
         ),
       ),
@@ -72,10 +72,7 @@ class _MapScreenState extends State<MapScreen> {
       _markers.add(
         Marker(
           markerId: MarkerId('current'),
-          position: LatLng(
-            _currentPosition.latitude,
-            _currentPosition.longitude,
-          ),
+          position: LatLng(2.273664,102.446846),
           infoWindow: InfoWindow(title: 'Your Location'),
         ),
       );
@@ -107,8 +104,8 @@ class _MapScreenState extends State<MapScreen> {
     final collectionReference =
         FirebaseFirestore.instance.collection('checkpoints');
     final center = geo.point(
-      latitude: _currentPosition.latitude,
-      longitude: _currentPosition.longitude,
+      latitude: 2.273664,
+      longitude: 102.446846,
     );
     final radius = 50.0; // in meters
 
