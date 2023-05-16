@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:checkpoint_geofence/screens/map_screen.dart';
 import 'package:checkpoint_geofence/screens/distance_screen.dart';
-
-import 'map_screen.dart';
-import 'distance_screen.dart';
-import 'leaderboard_screen.dart';
-import 'finisher_screen.dart';
+import 'package:checkpoint_geofence/screens/leaderboard_screen.dart';
+import 'package:checkpoint_geofence/screens/finisher_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -16,12 +13,11 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _children = [
-  MapScreen(),
-  DistanceScreen(),
-  //LeaderboardScreen(),
-  //FinisherScreen(),
-];
-
+    MapScreen(),
+    DistanceScreen(),
+    LeaderboardScreen(),
+    FinisherScreen(),
+  ];
 
   void onTabTapped(int index) {
     setState(() {

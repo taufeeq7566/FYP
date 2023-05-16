@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:checkpoint_geofence/screens/map_screen.dart';
 import 'package:checkpoint_geofence/models/permission_handler.dart';
+import 'route.dart';
+import 'package:checkpoint_geofence/screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,9 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: MyHomePage(),
+      routes: {
+        AppRoute.home: (context) => HomeScreen(),
+      },
     );
   }
 }
@@ -31,20 +35,17 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Permission Handler"),
+        title: const Text("Marathon App"),
       ),
       body: Center(
         child: Padding(
-          padding: EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(20.0),
           child: ElevatedButton(
             onPressed: () {
               requestLocationAndCameraPermissions().then((granted) {
                 if (granted) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => MapScreen()),
-                  );
-                }
+                  Navigator.pushReplacementNamed(context, AppRoute.home);
+                } 
               });
             },
             child: Text(
