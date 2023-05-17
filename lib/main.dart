@@ -48,7 +48,7 @@ class MyHomePage extends StatelessWidget {
                 } 
               });
             },
-            child: Text(
+            child: const Text(
               "Request Permissions",
               style: TextStyle(fontSize: 16),
             ),
