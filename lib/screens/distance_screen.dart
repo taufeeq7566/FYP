@@ -49,8 +49,9 @@ class _DistanceScreenState extends State<DistanceScreen> {
         checkpoint.longitude,
       );
 
+      String formattedDistance = distance.toStringAsFixed(2); // Format distance to two decimal places
       distances.add(distance); // Add the distance to the list
-      print('Distance to ${checkpoint.name}: $distance meters');
+      print('Distance to ${checkpoint.name}: $formattedDistance meters');
 
       // Check if the user is within the geofence radius (e.g., 50 meters)
       if (distance <= 50) {
@@ -100,7 +101,7 @@ class _DistanceScreenState extends State<DistanceScreen> {
                     style: TextStyle(fontSize: 16),
                   ),
                   subtitle: Text(
-                    'Distance: ${distances[index]} meters',
+                    'Distance: ${distances[index].toStringAsFixed(2)} meters',
                     style: TextStyle(fontSize: 14),
                   ),
                 );
