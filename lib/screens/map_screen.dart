@@ -25,11 +25,13 @@ class MapScreen extends StatefulWidget {
   _MapScreenState createState() => _MapScreenState();
 }
 class _MapScreenState extends State<MapScreen> {
-  late GoogleMapController _mapController;
-  late Position _currentPosition;
+  late GoogleMapController mapController;
+  late Position currentPosition;
   final Set<Marker> _markers = {};
   final GeoFlutterFire geo = GeoFlutterFire();
   late Stream<List<DocumentSnapshot<Map<String, dynamic>>>> _stream;
+
+  final LatLng _center = const LatLng(2.273664, 102.446846);
 
   @override
   void initState() {
@@ -49,10 +51,7 @@ class _MapScreenState extends State<MapScreen> {
         onMapCreated: _onMapCreated,
         markers: _markers,
         initialCameraPosition: CameraPosition(
-          target: LatLng(
-            2.273664,
-            102.446846
-          ), //temporary coordinate
+          target: _center,
           zoom: 15,
         ),
       ),
@@ -60,7 +59,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _onMapCreated(GoogleMapController controller) {
-    _mapController = controller;
+    mapController = controller;
   }
 
   void _getCurrentLocation() async {
@@ -68,11 +67,11 @@ class _MapScreenState extends State<MapScreen> {
       desiredAccuracy: LocationAccuracy.high,
     );
     setState(() {
-      _currentPosition = position;
+      currentPosition = position;
       _markers.add(
         Marker(
           markerId: MarkerId('current'),
-          position: LatLng(2.273664,102.446846),
+          position: _center,
           infoWindow: InfoWindow(title: 'Your Location'),
         ),
       );
@@ -137,9 +136,6 @@ _stream = query.switchMap((events) {
 
   return BehaviorSubject.seeded(updatedMarkers.cast<DocumentSnapshot<Map<String, dynamic>>>());
 });
-
-
-  
 
 }
 

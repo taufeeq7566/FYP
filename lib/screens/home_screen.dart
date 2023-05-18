@@ -10,47 +10,78 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
-
-  final List<Widget> _children = [
-    MapScreen(),
-    DistanceScreen(),
-    LeaderboardScreen(),
-    FinisherScreen(),
+  List<MenuButton> _menuButtons = [
+    MenuButton(
+      label: 'Map',
+      icon: Icons.map,
+      screen: MapScreen(),
+    ),
+    MenuButton(
+      label: 'Distance',
+      icon: Icons.directions_run,
+      screen: DistanceScreen(),
+    ),
+    MenuButton(
+      label: 'Leaderboard',
+      icon: Icons.emoji_events,
+      screen: LeaderboardScreen(),
+    ),
+    MenuButton(
+      label: 'Finisher',
+      icon: Icons.check_circle,
+      screen: FinisherScreen(),
+    ),
   ];
-
-  void onTabTapped(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _children[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        onTap: onTabTapped,
-        currentIndex: _currentIndex,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.map),
-            label: 'Map',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.directions_run),
-            label: 'Distance',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.emoji_events),
-            label: 'Leaderboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.check_circle),
-            label: 'Finisher',
-          ),
-        ],
+      appBar: AppBar(
+        title: Text('Navigation Menu'),
+      ),
+      body: GridView.count(
+        crossAxisCount: 2,
+        padding: EdgeInsets.all(16.0),
+        childAspectRatio: 1.0,
+        mainAxisSpacing: 16.0,
+        crossAxisSpacing: 16.0,
+        children: _menuButtons.map((button) {
+          return InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => button.screen),
+              );
+            },
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  button.icon,
+                  size: 64.0,
+                ),
+                SizedBox(height: 8.0),
+                Text(
+                  button.label,
+                  style: TextStyle(fontSize: 16.0),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
       ),
     );
   }
+}
+
+class MenuButton {
+  final String label;
+  final IconData icon;
+  final Widget screen;
+
+  MenuButton({
+    required this.label,
+    required this.icon,
+    required this.screen,
+  });
 }
