@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:checkpoint_geofence/models/permission_handler.dart';
 import 'route.dart';
 import 'package:checkpoint_geofence/screens/home_screen.dart';
+import 'package:checkpoint_geofence/screens/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
