@@ -10,7 +10,18 @@ class DistanceScreen extends StatefulWidget {
 }
 
 class _DistanceScreenState extends State<DistanceScreen> {
-  late Position _currentPosition;
+  late Position _currentPosition = Position(
+    latitude: 0,
+    longitude: 0,
+    timestamp: DateTime.now(),
+    accuracy: 0,
+    altitude: 0,
+    heading: 0,
+    speed: 0,
+    speedAccuracy: 0,
+  );
+
+  List<double> distances = [];
 
   @override
   void initState() {
@@ -27,25 +38,28 @@ class _DistanceScreenState extends State<DistanceScreen> {
     });
   }
 
-void _calculateDistance() {
-  for (Checkpoint checkpoint in checkpoints) {
-    double distance = Geolocator.distanceBetween(
-      _currentPosition.latitude,
-      _currentPosition.longitude,
-      checkpoint.latitude,
-      checkpoint.longitude,
-    );
+  void _calculateDistance() {
+    distances.clear(); // Clear previous distances
 
-    print('Distance to ${checkpoint.name}: $distance meters');
+    for (Checkpoint checkpoint in checkpoints) {
+      double distance = Geolocator.distanceBetween(
+        _currentPosition.latitude,
+        _currentPosition.longitude,
+        checkpoint.latitude,
+        checkpoint.longitude,
+      );
 
-    // Check if the user is within the geofence radius (e.g., 50 meters)
-    if (distance <= 50) {
-      // User is within the geofence, perform desired actions (e.g., show a notification)
-      print('User is within the geofence of ${checkpoint.name}');
+      distances.add(distance); // Add the distance to the list
+      print('Distance to ${checkpoint.name}: $distance meters');
+
+      // Check if the user is within the geofence radius (e.g., 50 meters)
+      if (distance <= 50) {
+        // User is within the geofence, perform desired actions (e.g., show a notification)
+        print('User is within the geofence of ${checkpoint.name}');
+      }
     }
+    setState(() {}); // Trigger a rebuild to update the UI
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -75,11 +89,26 @@ void _calculateDistance() {
               onPressed: _calculateDistance,
               child: Text('Calculate Distance'),
             ),
+            SizedBox(height: 20),
+            ListView.builder(
+              shrinkWrap: true,
+              itemCount: distances.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(
+                    checkpoints[index].name,
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  subtitle: Text(
+                    'Distance: ${distances[index]} meters',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),
     );
   }
 }
-
-
