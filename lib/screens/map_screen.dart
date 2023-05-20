@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+/*import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -20,10 +20,12 @@ class MockDocumentSnapshot<T> {
     required this.metadata,
   });
 }
+
 class MapScreen extends StatefulWidget {
   @override
   _MapScreenState createState() => _MapScreenState();
 }
+
 class _MapScreenState extends State<MapScreen> {
   late GoogleMapController mapController;
   late Position currentPosition;
@@ -32,6 +34,7 @@ class _MapScreenState extends State<MapScreen> {
   late Stream<List<DocumentSnapshot<Map<String, dynamic>>>> _stream;
 
   final LatLng _center = const LatLng(2.273664, 102.446846);
+  final double _geofenceRadius = 50.0; // in meters
 
   @override
   void initState() {
@@ -52,7 +55,192 @@ class _MapScreenState extends State<MapScreen> {
         markers: _markers,
         initialCameraPosition: CameraPosition(
           target: _center,
-          zoom: 15,
+          zoom: 18,
+        ),
+      ),
+    );
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
+  }
+
+  void _getCurrentLocation() async {
+    final position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+    setState(() {
+      currentPosition = position;
+      _markers.add(
+        Marker(
+          markerId: MarkerId('current'),
+          position: LatLng(position.latitude, position.longitude),
+          infoWindow: const InfoWindow(title: 'Your current Location'),
+        ),
+      );
+    });
+  }
+
+  void _setGeofence() async {
+    final checkpointsSnapshot =
+        await FirebaseFirestore.instance.collection('Checkpoints').get();
+    checkpointsSnapshot.docs.forEach((checkpointDoc) async {
+      final id = checkpointDoc.id;
+      final data = checkpointDoc.data();
+      final latitude = data['latitude'];
+      final longitude = data['longitude'];
+      final checkpointRef =
+          FirebaseFirestore.instance.collection('Checkpoints').doc(id);
+      final point = GeoFirePoint(latitude, longitude);
+      await checkpointRef.set(
+        {
+          'position': point.data,
+          'isVisited': false,
+        },
+        SetOptions(merge: true),
+      );
+
+      setState(() {
+        _markers.add(
+          Marker(
+            markerId: MarkerId(id),
+            position: LatLng(latitude, longitude),
+            infoWindow: const InfoWindow(title: 'Checkpoint'),
+          ),
+        );
+      });
+    });
+  }
+
+  void _listenForGeofenceEvents() {
+    final collectionReference =
+        FirebaseFirestore.instance.collection('Checkpoints');
+    final center = geo.point(
+      latitude: _center.latitude,
+      longitude: _center.longitude,
+    );
+
+    final query = geo.collection(collectionRef: collectionReference).within(
+      center: center,
+      radius: _geofenceRadius,
+      field: 'position',
+    );
+
+    _stream = query.switchMap((events) {
+      final updatedMarkers = events.map((event) {
+        final data = event.data() as Map<String, dynamic>;
+        final markerId = MarkerId(event.id);
+        final position = LatLng(data['position'].latitude, data['position'].longitude);
+        final isVisited = data['isVisited'] ?? false;
+
+        final documentData = {
+          'position': GeoPoint(position.latitude, position.longitude),
+          'isVisited': isVisited,
+        };
+
+        return MockDocumentSnapshot<Map<String, dynamic>>(
+          id: event.id,
+          data: documentData,
+          exists: true,
+          metadata: event.metadata,
+        );
+      }).toList();
+
+      setState(() {
+        _markers.addAll(updatedMarkers.map((snapshot) {
+          final position = snapshot.data!['position'] as GeoPoint;
+          return Marker(
+            markerId: MarkerId(snapshot.id),
+            position: LatLng(position.latitude, position.longitude),
+            infoWindow: const InfoWindow(title: 'Checkpoint'),
+          );
+        }));
+      });
+
+      return BehaviorSubject.seeded(updatedMarkers.cast<DocumentSnapshot<Map<String, dynamic>>>());
+    });
+  }
+}*/ //code to implement firebase
+
+
+//
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geoflutterfire2/geoflutterfire2.dart';
+import 'package:rxdart/rxdart.dart';
+import 'package:checkpoint_geofence/models/checkpoint.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+
+class MapScreen extends StatefulWidget {
+  @override
+  _MapScreenState createState() => _MapScreenState();
+}
+
+class _MapScreenState extends State<MapScreen> {
+  late GoogleMapController mapController;
+  late Position currentPosition;
+  final Set<Marker> _markers = {};
+  final GeoFlutterFire geo = GeoFlutterFire();
+  late Stream<List<DocumentSnapshot<Map<String, dynamic>>>> _stream;
+
+  final LatLng _center = const LatLng(2.273664, 102.446846);
+  final Set<Circle> _circles = {};
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+    _setGeofence();
+    _listenForGeofenceEvents();
+    _initializeNotifications();
+  }
+
+  void _initializeNotifications() {
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('Marathon App');
+  final InitializationSettings initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+  flutterLocalNotificationsPlugin.initialize(initializationSettings);
+}
+
+void _showNotification(String message) async {
+  const AndroidNotificationDetails androidPlatformChannelSpecifics =
+      AndroidNotificationDetails(
+    'Geofence_channel',
+    'Geofence Event',
+    importance: Importance.max,
+    priority: Priority.high,
+    ticker: 'ticker',
+  );
+  const NotificationDetails platformChannelSpecifics =
+      NotificationDetails(android: androidPlatformChannelSpecifics);
+  await flutterLocalNotificationsPlugin.show(
+    0,
+    'Geofence Notification',
+    message,
+    platformChannelSpecifics,
+  );
+}
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Map Screen'),
+      ),
+      body: GoogleMap(
+        onMapCreated: _onMapCreated,
+        markers: _markers,
+        circles: _circles,
+        initialCameraPosition: CameraPosition(
+          target: _center,
+          zoom: 18,
         ),
       ),
     );
@@ -72,71 +260,73 @@ class _MapScreenState extends State<MapScreen> {
         Marker(
           markerId: MarkerId('current'),
           position: _center,
-          infoWindow: InfoWindow(title: 'Your Location'),
+          infoWindow: const InfoWindow(title: 'Your current Location'),
         ),
       );
     });
   }
 
-  void _setGeofence() async {
-    final checkpointsSnapshot =
-        await FirebaseFirestore.instance.collection('checkpoints').get();
-    checkpointsSnapshot.docs.forEach((checkpointDoc) async {
-      final id = checkpointDoc.id;
-      final data = checkpointDoc.data();
-      final latitude = data['latitude'];
-      final longitude = data['longitude'];
-      final checkpointRef =
-          FirebaseFirestore.instance.collection('checkpoints').doc(id);
-      final point = GeoFirePoint(latitude, longitude);
-      await checkpointRef.set(
-        {
-          'position': point.data,
-          'isVisited': false,
-        },
-        SetOptions(merge: true),
+void _setGeofence() {
+  for (var checkpoint in checkpoints) {
+    final id = checkpoint.name;
+    final latitude = checkpoint.latitude;
+    final longitude = checkpoint.longitude;
+    final point = GeoFirePoint(latitude, longitude);
+
+    setState(() {
+      _markers.add(
+        Marker(
+          markerId: MarkerId(id),
+          position: LatLng(latitude, longitude),
+          infoWindow: InfoWindow(title: id),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        ),
+      );
+
+      _markers.add(
+        Marker(
+          markerId: MarkerId('$id-geofence'),
+          position: LatLng(latitude, longitude),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          zIndex: 0,
+          visible: true,
+        ),
+      );
+
+      _circles.add(
+        Circle(
+          circleId: CircleId('$id-geofence-circle'),
+          center: LatLng(latitude, longitude),
+          radius: 20, // Geofence radius in meters
+          fillColor: Colors.blue.withOpacity(0.2),
+          strokeColor: Colors.blue.withOpacity(0.4),
+          strokeWidth: 2,
+        ),
       );
     });
   }
-
- void _listenForGeofenceEvents() {
-    final collectionReference =
-        FirebaseFirestore.instance.collection('checkpoints');
-    final center = geo.point(
-      latitude: 2.273664,
-      longitude: 102.446846,
-    );
-    final radius = 50.0; // in meters
-
-    final query = geo.collection(collectionRef: collectionReference).within(
-      center: center,
-      radius: radius,
-      field: 'position',
-    );
-
-_stream = query.switchMap((events) {
-  final updatedMarkers = events.map((event) {
-    final data = event.data() as Map<String, dynamic>;  // Explicitly cast data to Map<String, dynamic>
-    final markerId = MarkerId(event.id);
-    final position = LatLng(data['position']?.latitude, data['position']?.longitude);
-    final isVisited = data['isVisited'] ?? false;
-
-    final documentData = {
-      'position': GeoPoint(position.latitude, position.longitude),
-      'isVisited': isVisited,
-    };
-
-    return MockDocumentSnapshot<Map<String, dynamic>>(
-      id: event.id,
-      data: documentData,
-      exists: true,
-      metadata: event.metadata,
-    );
-  }).toList();
-
-  return BehaviorSubject.seeded(updatedMarkers.cast<DocumentSnapshot<Map<String, dynamic>>>());
-});
-
 }
 
+
+
+void _listenForGeofenceEvents() {
+  Geolocator.getPositionStream().listen((Position position) {
+    for (var checkpoint in checkpoints) {
+      final double distance = Geolocator.distanceBetween(
+        position.latitude,
+        position.longitude,
+        checkpoint.latitude,
+        checkpoint.longitude,
+      );
+
+      if (distance <= 20 && !checkpoint.isVisited) {
+        checkpoint.isVisited = true;
+        _showNotification('You are in ${checkpoint.name}');
+      } else if (distance > 20 && checkpoint.isVisited) {
+        checkpoint.isVisited = false;
+        _showNotification('You have passed ${checkpoint.name}');
+      }
+    }
+  });
+}
 }

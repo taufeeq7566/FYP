@@ -4,11 +4,13 @@ class Checkpoint {
   final String name;
   final double latitude;
   final double longitude;
+  bool isVisited;
 
   Checkpoint({
     required this.name,
     required this.latitude,
     required this.longitude,
+    this.isVisited = false,
   });
 
   Map<String, dynamic> toMap() {
