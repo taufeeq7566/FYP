@@ -172,7 +172,7 @@ import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:checkpoint_geofence/models/checkpoint.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:geolocator_platform_interface/location_options.dart';
+import 'dart:async';
 
 
 class MapScreen extends StatefulWidget {
@@ -192,6 +192,10 @@ class _MapScreenState extends State<MapScreen> {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
+  Marker? _currentLocationMarker;
+  Timer? _locationTimer;
+
+
 
   @override
   void initState() {
@@ -200,6 +204,7 @@ class _MapScreenState extends State<MapScreen> {
     _setGeofence();
     _listenForGeofenceEvents();
     _initializeNotifications();
+    _startLocationUpdates();
   }
 
   void _initializeNotifications() {
@@ -229,6 +234,8 @@ void _showNotification(String message) async {
   );
 }
 
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -251,21 +258,47 @@ void _showNotification(String message) async {
     mapController = controller;
   }
 
-  void _getCurrentLocation() async {
-    final position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-    setState(() {
-      currentPosition = position;
-      _markers.add(
-        Marker(
-          markerId: MarkerId('current'),
-          position: _center,
-          infoWindow: const InfoWindow(title: 'Your current Location'),
-        ),
-      );
+    void dispose() {
+    _stopLocationUpdates();
+    super.dispose();
+  }
+
+  void _startLocationUpdates() {
+    _locationTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      _getCurrentLocation();
     });
   }
+
+  void _stopLocationUpdates() {
+    _locationTimer?.cancel();
+    _locationTimer = null;
+  }
+
+void _getCurrentLocation() async {
+  final position = await Geolocator.getCurrentPosition(
+    desiredAccuracy: LocationAccuracy.high,
+  );
+
+  setState(() {
+    currentPosition = position;
+
+    // Remove the previous marker if it exists
+    if (_currentLocationMarker != null) {
+      _markers.remove(_currentLocationMarker);
+    }
+
+    // Add the new marker for the current location
+    _currentLocationMarker = Marker(
+      markerId: MarkerId('current'),
+      position: LatLng(position.latitude, position.longitude),
+      infoWindow: const InfoWindow(title: 'Your current Location'),
+    );
+
+    _markers.add(_currentLocationMarker!);
+  });
+}
+
+
 
 void _setGeofence() {
   for (var checkpoint in checkpoints) {
@@ -311,11 +344,6 @@ void _setGeofence() {
 
 
 void _listenForGeofenceEvents() {
-    final locationOptions = LocationOptions(
-    accuracy: LocationAccuracy.best,
-    distanceFilter: 10,
-    timeInterval: 2000,
-  );
   Geolocator.getPositionStream().listen((Position position) {
     for (var checkpoint in checkpoints) {
       final double distance = Geolocator.distanceBetween(

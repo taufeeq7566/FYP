@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:checkpoint_geofence/models/checkpoint.dart';
+import 'dart:async';
 
 class DistanceScreen extends StatefulWidget {
   const DistanceScreen({Key? key}) : super(key: key);
@@ -22,11 +23,19 @@ class _DistanceScreenState extends State<DistanceScreen> {
   );
 
   List<double> distances = [];
+  late Timer _timer;
 
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
+    _startDistanceUpdates();
+  }
+
+  @override
+  void dispose() {
+    _stopDistanceUpdates();
+    super.dispose();
   }
 
   void _getCurrentLocation() async {
@@ -36,6 +45,17 @@ class _DistanceScreenState extends State<DistanceScreen> {
     setState(() {
       _currentPosition = position;
     });
+  }
+
+  void _startDistanceUpdates() {
+    _timer = Timer.periodic(const Duration(seconds: 2), (_) {
+      _getCurrentLocation();
+      _calculateDistance();
+    });
+  }
+
+  void _stopDistanceUpdates() {
+    _timer.cancel();
   }
 
   void _calculateDistance() {
@@ -54,7 +74,7 @@ class _DistanceScreenState extends State<DistanceScreen> {
       print('Distance to ${checkpoint.name}: $formattedDistance meters');
 
       // Check if the user is within the geofence radius (e.g., 50 meters)
-      if (distance <= 50) {
+      if (distance <= 20) {
         // User is within the geofence, perform desired actions (e.g., show a notification)
         print('User is within the geofence of ${checkpoint.name}');
       }
@@ -86,11 +106,6 @@ class _DistanceScreenState extends State<DistanceScreen> {
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _calculateDistance,
-              child: Text('Calculate Distance'),
-            ),
-            SizedBox(height: 20),
             ListView.builder(
               shrinkWrap: true,
               itemCount: distances.length,
@@ -113,3 +128,4 @@ class _DistanceScreenState extends State<DistanceScreen> {
     );
   }
 }
+

@@ -46,7 +46,7 @@ class MyHomePage extends StatelessWidget {
               requestLocationAndCameraPermissions().then((granted) {
                 if (granted) {
                   Navigator.pushReplacementNamed(context, AppRoute.home);
-                } 
+                }
               });
             },
             child: const Text(
