@@ -172,6 +172,7 @@ import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:checkpoint_geofence/models/checkpoint.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:geolocator_platform_interface/location_options.dart';
 
 
 class MapScreen extends StatefulWidget {
@@ -310,6 +311,11 @@ void _setGeofence() {
 
 
 void _listenForGeofenceEvents() {
+    final locationOptions = LocationOptions(
+    accuracy: LocationAccuracy.best,
+    distanceFilter: 10,
+    timeInterval: 2000,
+  );
   Geolocator.getPositionStream().listen((Position position) {
     for (var checkpoint in checkpoints) {
       final double distance = Geolocator.distanceBetween(
