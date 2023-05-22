@@ -208,7 +208,7 @@ class _MapScreenState extends State<MapScreen> {
 
   void _initializeNotifications() {
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('Marathon App'); // App icon name
+        AndroidInitializationSettings('@mipmap/ic_launcher'); // the notification image
     final InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
     flutterLocalNotificationsPlugin.initialize(initializationSettings);
