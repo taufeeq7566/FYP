@@ -6,6 +6,7 @@ import 'route.dart';
 import 'package:checkpoint_geofence/screens/home_screen.dart';
 import 'package:checkpoint_geofence/screens/login_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,7 +35,39 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatelessWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  MyHomePage({Key? key}) : super(key: key) {
+    _initializeNotifications();
+  }
+
+  void _initializeNotifications() {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('Testing');
+    final InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  void _showDummyNotification() async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'dummy_channel',
+      'Dummy Notification',
+      importance: Importance.max,
+      priority: Priority.high,
+      ticker: 'ticker',
+    );
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'Dummy Notification',
+      'This is a dummy notification',
+      platformChannelSpecifics,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,21 +78,38 @@ class MyHomePage extends StatelessWidget {
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
-          child: ElevatedButton(
-            onPressed: () {
-              requestLocationAndCameraPermissions().then((granted) {
-                if (granted) {
-                  Navigator.pushReplacementNamed(context, AppRoute.home);
-                }
-              });
-            },
-            child: const Text(
-              "Request Permissions",
-              style: TextStyle(fontSize: 16),
-            ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  _showDummyNotification(); // Call the method to trigger the dummy notification
+                  requestLocationAndCameraPermissions().then((granted) {
+                    if (granted) {
+                      Navigator.pushReplacementNamed(context, AppRoute.home);
+                    }
+                  });
+                },
+                child: const Text(
+                  "Request Permissions",
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+              SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: () {
+                  _showDummyNotification(); // Call the method to trigger the dummy notification
+                },
+                child: const Text(
+                  "Testing",
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 }
+

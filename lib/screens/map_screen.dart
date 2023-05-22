@@ -169,11 +169,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geoflutterfire2/geoflutterfire2.dart';
-import 'package:rxdart/rxdart.dart';
 import 'package:checkpoint_geofence/models/checkpoint.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:async';
-import 'package:firebase_messaging/firebase_messaging.dart';
 
 class MapScreen extends StatefulWidget {
   @override
@@ -194,8 +192,6 @@ class _MapScreenState extends State<MapScreen> {
 
   Marker? _currentLocationMarker;
   Timer? _locationTimer;
-
-  FirebaseMessaging messaging = FirebaseMessaging.instance;
 
 
 
@@ -218,24 +214,25 @@ class _MapScreenState extends State<MapScreen> {
     flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
-  void _showNotification(String message) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      'geofence_channel',
-      'Geofence Event',
-      importance: Importance.max,
-      priority: Priority.high,
-      ticker: 'ticker',
-    );
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.show(
-      0,
-      'Geofence Notification',
-      message,
-      platformChannelSpecifics,
-    );
-  }
+void _showNotification(String message) async {
+  const AndroidNotificationDetails androidPlatformChannelSpecifics =
+      AndroidNotificationDetails(
+    'geofence_channel',
+    'Geofence Event',
+    importance: Importance.max,
+    priority: Priority.high,
+    ticker: 'ticker',
+  );
+  const NotificationDetails platformChannelSpecifics =
+      NotificationDetails(android: androidPlatformChannelSpecifics);
+  await flutterLocalNotificationsPlugin.show(
+    0,
+    'Geofence Notification',
+    message,
+    platformChannelSpecifics,
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
