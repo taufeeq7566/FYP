@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:checkpoint_geofence/Forms/register.dart';
 
 enum UserRole {
   contestant,
@@ -188,7 +189,12 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _register() {
-    Navigator.pushNamed(context, '/register');
-  }
+Future<void> _register() async {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return RegisterDialog();
+    },
+  );
+}
 }

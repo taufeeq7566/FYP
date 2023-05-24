@@ -49,6 +49,7 @@ dependencies:
   firebase_auth: ^4.6.1
   geolocator_platform_interface: 4.0.7
   firebase_messaging: ^14.6.1
+  firebase_database: ^10.2.1
 
 
 dev_dependencies:

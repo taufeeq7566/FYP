@@ -5,8 +5,6 @@ import 'firebase_options.dart';
 import 'route.dart';
 import 'package:checkpoint_geofence/screens/home_screen.dart';
 import 'package:checkpoint_geofence/screens/login_screen.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +26,7 @@ class MyApp extends StatelessWidget {
       ),
       home: MyHomePage(),
       routes: {
-        AppRoute.home: (context) => HomeScreen(),
+        AppRoute.home: (context) => LoginScreen(),
       },
     );
   }
