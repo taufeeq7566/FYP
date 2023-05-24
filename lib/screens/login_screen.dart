@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:checkpoint_geofence/Forms/register.dart';
+import 'package:checkpoint_geofence/screens/home_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 enum UserRole {
   contestant,
@@ -92,31 +93,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                     ),
                     SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              if (_formKey.currentState!.validate()) {
-                                _login();
-                              }
-                            },
-                            child: const Text('Login'),
-                          ),
-                        ),
-                        SizedBox(width: 16),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              if (_formKey.currentState!.validate()) {
-                                _loginAsSpectator();
-                              }
-                            },
-                            child: const Text('Login As Spectator'),
-                          ),
-                        ),
-                      ],
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          _login();
+                        }
+                      },
+                      child: const Text('Login'),
                     ),
                     SizedBox(height: 16),
                     ElevatedButton(
@@ -161,7 +144,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
         // Clear the form and navigate to the home screen
         _formKey.currentState!.reset();
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(),
+          ),
+        );
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
@@ -170,31 +158,12 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _loginAsSpectator() async {
-    try {
-      final UserCredential userCredential =
-          await FirebaseAuth.instance.signInAnonymously();
-
-      final User? user = userCredential.user;
-
-      if (user != null) {
-        // Clear the form and navigate to the home screen
-        _formKey.currentState!.reset();
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = e.message!;
-      });
-    }
+  Future<void> _register() async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return RegisterDialog();
+      },
+    );
   }
-
-Future<void> _register() async {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return RegisterDialog();
-    },
-  );
-}
 }

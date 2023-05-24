@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:checkpoint_geofence/models/permission_handler.dart';
-import 'firebase_options.dart';
-import 'route.dart';
 import 'package:checkpoint_geofence/screens/home_screen.dart';
 import 'package:checkpoint_geofence/screens/login_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+
+import 'firebase_options.dart';
+import 'route.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,23 +41,41 @@ class MyHomePage extends StatelessWidget {
         title: const Text("Marathon App"),
       ),
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: ElevatedButton(
-            onPressed: () {
-              requestLocationAndCameraPermissions().then((granted) {
-                if (granted) {
-                  Navigator.pushReplacementNamed(context, AppRoute.home);
-                }
-              });
-            },
-            child: const Text(
-              "Request Permissions",
-              style: TextStyle(fontSize: 16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                requestLocationAndCameraPermissions().then((granted) {
+                  if (granted) {
+                    Navigator.pushReplacementNamed(context, AppRoute.home);
+                  }
+                });
+              },
+              child: const Text(
+                "Login as User",
+                style: TextStyle(fontSize: 16),
+              ),
             ),
-          ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HomeScreen(),
+                  ),
+                );
+              },
+              child: const Text(
+                "Login as Spectator",
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+

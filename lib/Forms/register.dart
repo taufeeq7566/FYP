@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
+
 
 enum UserRole {
   contestant,
@@ -20,7 +22,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
   UserRole? _selectedRole;
   String _errorMessage = '';
 
-  DatabaseReference dbRef = FirebaseDatabase.instance.ref('https://marathon-35ffa-default-rtdb.asia-southeast1.firebasedatabase.app',);
+  DatabaseReference dbRef = FirebaseDatabase.instance.ref();
 
   @override
   Widget build(BuildContext context) {
@@ -95,26 +97,44 @@ class _RegisterDialogState extends State<RegisterDialog> {
     );
   }
 
-  Future<void> _register() async {
+Future<void> _register() async {
+  if (_selectedRole == UserRole.contestant) {
+    // Clear the form and close the dialog
+    _formKey.currentState!.reset();
+    Navigator.pop(context); // Close the register dialog
+  } else {
     try {
       if (_formKey.currentState!.validate()) {
-        final DatabaseReference userRef =
-            dbRef.child('users').push();
+        // Register with Firebase Authentication
+        final UserCredential userCredential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
 
-        await userRef.set({
-          'email': _emailController.text.trim(),
-          'role': _selectedRole.toString(),
-          // Add other user details as needed
-        });
+        final User? user = userCredential.user;
 
-        // Clear the form and close the dialog
-        _formKey.currentState!.reset();
-        Navigator.pop(context); // Close the register dialog
+        if (user != null) {
+          // Store user details in the Firebase Realtime Database
+          final DatabaseReference userRef =
+              dbRef.child('users').child(user.uid);
+
+          await userRef.set({
+            'email': _emailController.text.trim(),
+            'role': _selectedRole.toString(),
+            // Add other user details as needed
+          });
+
+          // Clear the form and close the dialog
+          _formKey.currentState!.reset();
+          Navigator.pop(context); // Close the register dialog
+        }
       }
-    } catch (e) {
+    } on FirebaseAuthException catch (e) {
       setState(() {
-        _errorMessage = 'An error occurred during registration.';
+        _errorMessage = e.message!;
       });
     }
   }
+}
 }
