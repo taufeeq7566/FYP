@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
-
 enum UserRole {
   contestant,
   organizer,
@@ -19,6 +18,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _usernameController = TextEditingController();
+
   UserRole? _selectedRole;
   String _errorMessage = '';
 
@@ -45,6 +46,16 @@ class _RegisterDialogState extends State<RegisterDialog> {
                 },
               ),
               TextFormField(
+                controller: _usernameController,
+                decoration: InputDecoration(labelText: 'Full Name'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your full name';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
                 controller: _passwordController,
                 decoration: InputDecoration(labelText: 'Password'),
                 obscureText: true,
@@ -60,11 +71,11 @@ class _RegisterDialogState extends State<RegisterDialog> {
                 items: [
                   DropdownMenuItem<UserRole>(
                     value: UserRole.contestant,
-                    child: Text('Contestant'),
+                    child: const Text('Contestant'),
                   ),
                   DropdownMenuItem<UserRole>(
                     value: UserRole.organizer,
-                    child: Text('Organizer'),
+                    child: const Text('Organizer'),
                   ),
                 ],
                 onChanged: (UserRole? value) {
@@ -72,7 +83,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
                     _selectedRole = value;
                   });
                 },
-                decoration: InputDecoration(labelText: 'Role'),
+                decoration: const InputDecoration(labelText: 'Role'),
                 validator: (value) {
                   if (value == null) {
                     return 'Please select a role';
@@ -80,7 +91,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
                   return null;
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _register,
                 child: const Text('Register'),
@@ -98,43 +109,38 @@ class _RegisterDialogState extends State<RegisterDialog> {
   }
 
 Future<void> _register() async {
-  if (_selectedRole == UserRole.contestant) {
-    // Clear the form and close the dialog
-    _formKey.currentState!.reset();
-    Navigator.pop(context); // Close the register dialog
-  } else {
-    try {
-      if (_formKey.currentState!.validate()) {
-        // Register with Firebase Authentication
-        final UserCredential userCredential =
-            await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
+  try {
+    if (_formKey.currentState!.validate()) {
+      // Register with Firebase Authentication
+      final UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
 
-        final User? user = userCredential.user;
+      final User? user = userCredential.user;
 
-        if (user != null) {
-          // Store user details in the Firebase Realtime Database
-          final DatabaseReference userRef =
-              dbRef.child('users').child(user.uid);
+      if (user != null) {
+        // Store user details in the Firebase Realtime Database
+        final DatabaseReference userRef =
+            dbRef.child('users').child(user.uid);
 
-          await userRef.set({
-            'email': _emailController.text.trim(),
-            'role': _selectedRole.toString(),
-            // Add other user details as needed
-          });
+        await userRef.set({
+          'email': _emailController.text.trim(),
+          'fullname': _usernameController.text.trim(),
+          'role': _selectedRole.toString(),
+          // Add other user details as needed
+        });
 
-          // Clear the form and close the dialog
-          _formKey.currentState!.reset();
-          Navigator.pop(context); // Close the register dialog
-        }
+        // Clear the form and close the dialog
+        _formKey.currentState!.reset();
+        Navigator.pop(context); // Close the register dialog
       }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = e.message!;
-      });
     }
+  } on FirebaseAuthException catch (e) {
+    setState(() {
+      _errorMessage = e.message!;
+    });
   }
 }
 }

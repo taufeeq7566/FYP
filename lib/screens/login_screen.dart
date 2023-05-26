@@ -1,4 +1,5 @@
 import 'package:checkpoint_geofence/Forms/register.dart';
+import 'package:checkpoint_geofence/organizer/organizer_menu.dart';
 import 'package:checkpoint_geofence/screens/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -72,11 +73,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       items: [
                         DropdownMenuItem<UserRole>(
                           value: UserRole.contestant,
-                          child: Text('Contestant'),
+                          child: const Text('Contestant'),
                         ),
                         DropdownMenuItem<UserRole>(
                           value: UserRole.organizer,
-                          child: Text('Organizer'),
+                          child: const Text('Organizer'),
                         ),
                       ],
                       onChanged: (UserRole? value) {
@@ -84,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           _selectedRole = value;
                         });
                       },
-                      decoration: InputDecoration(labelText: 'Role'),
+                      decoration: const InputDecoration(labelText: 'Role'),
                       validator: (value) {
                         if (value == null) {
                           return 'Please select a role';
@@ -123,9 +124,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     try {
+      final String email = _emailController.text.trim();
       final UserCredential userCredential =
           await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
+        email: email,
         password: _passwordController.text,
       );
 
@@ -136,20 +138,26 @@ class _LoginScreenState extends State<LoginScreen> {
         switch (_selectedRole) {
           case UserRole.contestant:
             // Perform actions for contestant role
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomeScreen(),
+              ),
+            );
             break;
           case UserRole.organizer:
             // Perform actions for organizer role
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => OrganizerMenu(),
+              ),
+            );
             break;
         }
 
-        // Clear the form and navigate to the home screen
+        // Clear the form
         _formKey.currentState!.reset();
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomeScreen(),
-          ),
-        );
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
