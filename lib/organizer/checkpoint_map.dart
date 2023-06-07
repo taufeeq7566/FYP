@@ -1,5 +1,4 @@
-import 'dart:async';
-
+import 'package:checkpoint_geofence/organizer/add_checkpoint.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -21,105 +20,30 @@ class _CheckpointMapScreenState extends State<CheckpointMapScreen> {
     _retrieveCheckpoints();
   }
 
-void _retrieveCheckpoints() {
-  _databaseReference.once().then((DataSnapshot snapshot) {
-    if (snapshot.value != null) {
-      Map<dynamic, dynamic> data = snapshot.value as Map<dynamic, dynamic>;
-      data.forEach((key, value) {
-        double latitude = value['latitude'];
-        double longitude = value['longitude'];
-        String name = value['name'];
+  void _retrieveCheckpoints() {
+    _databaseReference.once().then((event) {
+      final snapshot = event.snapshot;
+      if (snapshot.value != null) {
+        Map<dynamic, dynamic> data = snapshot.value as Map<dynamic, dynamic>;
+        data.forEach((key, value) {
+          double latitude = value['latitude'];
+          double longitude = value['longitude'];
 
-        setState(() {
-          _markers.add(
-            Marker(
-              markerId: MarkerId(key),
-              position: LatLng(latitude, longitude),
-              infoWindow: InfoWindow(title: name),
-            ),
-          );
+          setState(() {
+            _markers.add(
+              Marker(
+                markerId: MarkerId(key),
+                position: LatLng(latitude, longitude),
+              ),
+            );
+          });
         });
-      });
-    }
-  } as FutureOr Function(DatabaseEvent value));
-}
-
-
-
-  void _addCheckpoint() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        TextEditingController nameController = TextEditingController();
-        TextEditingController latitudeController = TextEditingController();
-        TextEditingController longitudeController = TextEditingController();
-
-        return AlertDialog(
-          title: Text('Add Checkpoint'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(labelText: 'Name'),
-              ),
-              TextField(
-                controller: latitudeController,
-                decoration: InputDecoration(labelText: 'Latitude'),
-                keyboardType: TextInputType.number,
-              ),
-              TextField(
-                controller: longitudeController,
-                decoration: InputDecoration(labelText: 'Longitude'),
-                keyboardType: TextInputType.number,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                String name = nameController.text;
-                double latitude = double.tryParse(latitudeController.text) ?? 0.0;
-                double longitude = double.tryParse(longitudeController.text) ?? 0.0;
-
-                if (name.isNotEmpty && latitude != 0.0 && longitude != 0.0) {
-                  _saveCheckpoint(name, latitude, longitude);
-                  Navigator.pop(context);
-                } else {
-                  // Show an error message or handle invalid input
-                }
-              },
-              child: Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
+      }
+    });
   }
 
-  void _saveCheckpoint(String name, double latitude, double longitude) {
-    DatabaseReference newCheckpointRef = _databaseReference.push();
-    newCheckpointRef.set({
-      'name': name,
-      'latitude': latitude,
-      'longitude': longitude,
-    });
-
-    setState(() {
-      _markers.add(
-        Marker(
-          markerId: MarkerId(newCheckpointRef.key!),
-          position: LatLng(latitude, longitude),
-          infoWindow: InfoWindow(title: name),
-        ),
-      );
-    });
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
   }
 
   @override
@@ -127,14 +51,6 @@ void _retrieveCheckpoints() {
     return Scaffold(
       appBar: AppBar(
         title: Text('Checkpoint Map'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.list),
-            onPressed: () {
-              _showCheckpointList();
-            },
-          ),
-        ],
       ),
       body: GoogleMap(
         onMapCreated: _onMapCreated,
@@ -146,51 +62,25 @@ void _retrieveCheckpoints() {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _addCheckpoint();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AddCheckpointScreen()),
+          ).then((value) {
+            if (value != null) {
+              // Add the new checkpoint marker based on the value returned
+              setState(() {
+                _markers.add(
+                  Marker(
+                    markerId: MarkerId(value['key']),
+                    position: LatLng(value['latitude'], value['longitude']),
+                  ),
+                );
+              });
+            }
+          });
         },
         child: Icon(Icons.add),
       ),
     );
-  }
-
-  void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
-  }
-
-  void _showCheckpointList() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Checkpoints'),
-          content: Container(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: _markers.length,
-              itemBuilder: (BuildContext context, int index) {
-                Marker marker = _markers.elementAt(index);
-                return ListTile(
-                  title: Text(marker.infoWindow.title ?? ''),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () {
-                      _deleteCheckpoint(marker);
-                      Navigator.pop(context);
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _deleteCheckpoint(Marker marker) {
-    String markerId = marker.markerId.value;
-    _markers.remove(marker);
-    _databaseReference.child(markerId).remove();
   }
 }
