@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:checkpoint_geofence/models/checkpoint.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -60,20 +59,10 @@ class _DistanceScreenState extends State<DistanceScreen> {
     _timer.cancel();
   }
 
-void _calculateDistance() {
-  distances.clear(); // Clear previous distances
+  void _calculateDistance() {
+    distances.clear(); // Clear previous distances
 
-  FirebaseFirestore.instance
-      .collection('checkpoints')
-      .get()
-      .then((QuerySnapshot querySnapshot) {
-    querySnapshot.docs.forEach((QueryDocumentSnapshot doc) {
-      final checkpoint = Checkpoint(
-        name: doc['name'],
-        latitude: doc['latitude'],
-        longitude: doc['longitude'],
-      );
-
+    for (Checkpoint checkpoint in checkpoints) {
       double distance = Geolocator.distanceBetween(
         _currentPosition.latitude,
         _currentPosition.longitude,
@@ -90,14 +79,9 @@ void _calculateDistance() {
         // User is within the geofence, perform desired actions (e.g., show a notification)
         print('User is within the geofence of ${checkpoint.name}');
       }
-    });
-
+    }
     setState(() {}); // Trigger a rebuild to update the UI
-  }).catchError((error) {
-    print("Failed to fetch checkpoints: $error");
-  });
-}
-
+  }
 
   @override
   Widget build(BuildContext context) {
