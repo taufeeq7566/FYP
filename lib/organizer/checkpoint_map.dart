@@ -52,7 +52,7 @@ class _CheckpointMapScreenState extends State<CheckpointMapScreen> {
     mapController.moveCamera(
       CameraUpdate.newLatLngZoom(
         LatLng(position.latitude, position.longitude),
-        15.0,
+        18.0,
       ),
     );
   }
@@ -72,8 +72,8 @@ class _CheckpointMapScreenState extends State<CheckpointMapScreen> {
         onMapCreated: _onMapCreated,
         markers: _markers,
         initialCameraPosition: CameraPosition(
-          target: LatLng(0.0, 0.0),
-          zoom: 15.0,
+          target: LatLng(2.273664,102.446846),
+          zoom: 18.0,
         ),
       ),
       floatingActionButton: Stack(

@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 
 class MapScreen extends StatefulWidget {
   @override
@@ -14,72 +14,77 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   late GoogleMapController mapController;
-  late Position currentPosition;
-  final Set<Marker> _markers = {};
+  Set<Marker> _markers = {};
   final Set<Circle> _circles = {};
-  final GeoFlutterFire geo = GeoFlutterFire();
+  final DatabaseReference _databaseReference =
+      FirebaseDatabase.instance.reference().child('checkpoints');
+  final LatLng _center = const LatLng(2.273664, 102.446846); // Center coordinate
+  final double _radius = 15.0; // Radius of the geofence in meters
+  Marker? _currentLocationMarker; // Marker for current location
+  List<Checkpoint> checkpoints = []; // List to store retrieved checkpoints
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
-  StreamSubscription<Position>? _subscription;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
 
-  Marker? _currentLocationMarker;
-  Timer? _locationTimer;
 
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
-    _setGeofence();
-    _listenForGeofenceEvents();
-    _initializeNotifications();
+    _retrieveCheckpoints();
     _startLocationUpdates();
+    _initializeNotifications();
+    _listenForGeofenceEvents();
   }
 
-  void _initializeNotifications() {
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher'); // the notification image
-    const InitializationSettings initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
-    flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  }
-  
-  void _showNotification(String message) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      'geofence_channel',
-      'Geofence Event',
-      importance: Importance.max,
-      priority: Priority.high,
-      ticker: 'ticker',
-    );
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.show(
-      0,
-      'Geofence Notification',
-      message,
-      platformChannelSpecifics,
-    );
-  }
+void _retrieveCheckpoints() {
+  _databaseReference.once().then((event) {
+    final snapshot = event.snapshot;
+    if (snapshot.value != null) {
+      Map<dynamic, dynamic> data = snapshot.value as Map<dynamic, dynamic>;
+      data.forEach((key, value) {
+        String name = value['name']; // Get the checkpoint name
+        double latitude = value['latitude'];
+        double longitude = value['longitude'];
 
-  @override
-  void dispose() {
-    _stopLocationUpdates();
-    _subscription?.cancel();
-    super.dispose();
+        setState(() {
+          checkpoints.add(Checkpoint(name: name, latitude: latitude, longitude: longitude));
+          _markers.add(
+            Marker(
+              markerId: MarkerId(key),
+              position: LatLng(latitude, longitude),
+              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue), // Marker color is blue
+              infoWindow: InfoWindow(title: name), // Set the checkpoint name as the title
+            ),
+          );
+
+          _circles.add(
+            Circle(
+              circleId: CircleId(key),
+              center: LatLng(latitude, longitude),
+              radius: _radius,
+              strokeWidth: 2,
+              strokeColor: Colors.blue,
+              fillColor: Colors.blue.withOpacity(0.3),
+            ),
+          );
+        });
+      });
+
+      print('Checkpoints: $checkpoints'); // Print the list of checkpoints
+    }
+  });
+}
+
+
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
+    mapController.moveCamera(CameraUpdate.newLatLngZoom(_center, 18.0)); // Set initial camera position
   }
 
   void _startLocationUpdates() {
-    _locationTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+    Timer.periodic(const Duration(seconds: 2), (_) {
       _getCurrentLocation();
     });
-  }
-
-  void _stopLocationUpdates() {
-    _locationTimer?.cancel();
-    _locationTimer = null;
   }
 
   void _getCurrentLocation() async {
@@ -88,8 +93,6 @@ class _MapScreenState extends State<MapScreen> {
     );
 
     setState(() {
-      currentPosition = position;
-
       // Remove the previous marker if it exists
       if (_currentLocationMarker != null) {
         _markers.remove(_currentLocationMarker);
@@ -99,116 +102,61 @@ class _MapScreenState extends State<MapScreen> {
       _currentLocationMarker = Marker(
         markerId: const MarkerId('current'),
         position: LatLng(position.latitude, position.longitude),
-        infoWindow: const InfoWindow(title: 'Your current Location'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed), // Set marker color to red
+        infoWindow: const InfoWindow(title: 'Your Current Location'),
       );
 
       _markers.add(_currentLocationMarker!);
     });
   }
+void _initializeNotifications() {
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher'); // the notification image
+  final InitializationSettings initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+  flutterLocalNotificationsPlugin.initialize(initializationSettings);
+}
 
-  void _setGeofence() async {
-    final checkpointsSnapshot =
-        await _firestore.collection('checkpoints').get();
+void _showNotification(String message) async {
+  const AndroidNotificationDetails androidPlatformChannelSpecifics =
+      AndroidNotificationDetails(
+    'geofence_channel',
+    'Geofence Event',
+    importance: Importance.max,
+    priority: Priority.high,
+    ticker: 'ticker',
+  );
+  const NotificationDetails platformChannelSpecifics =
+      NotificationDetails(android: androidPlatformChannelSpecifics);
+  await flutterLocalNotificationsPlugin.show(
+    0,
+    'Geofence Notification',
+    message,
+    platformChannelSpecifics,
+  );
+}
 
-    for (var checkpointSnapshot in checkpointsSnapshot.docs) {
-      final checkpointData = checkpointSnapshot.data();
-      final id = checkpointSnapshot.id;
-      final latitude = checkpointData['latitude'] as double;
-      final longitude = checkpointData['longitude'] as double;
 
-      setState(() {
-        _markers.add(
-          Marker(
-            markerId: MarkerId(id),
-            position: LatLng(latitude, longitude),
-            infoWindow: InfoWindow(title: id),
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-              BitmapDescriptor.hueGreen,
-            ),
-          ),
-        );
 
-        _markers.add(
-          Marker(
-            markerId: MarkerId('$id-geofence'),
-            position: LatLng(latitude, longitude),
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-              BitmapDescriptor.hueBlue,
-            ),
-            zIndex: 0,
-            visible: true,
-          ),
-        );
-
-        _circles.add(
-          Circle(
-            circleId: CircleId('$id-geofence-circle'),
-            center: LatLng(latitude, longitude),
-            radius: 20, // Geofence radius in meters
-            fillColor: Colors.blue.withOpacity(0.2),
-            strokeColor: Colors.blue.withOpacity(0.4),
-            strokeWidth: 2,
-          ),
-        );
-      });
-    }
-  }
-
-  void _listenForGeofenceEvents() async {
-    _subscription = Geolocator.getPositionStream().listen((Position position) {
-      for (var marker in _markers) {
-        final checkpointId = marker.markerId.value;
-        final checkpointMarkerId = '$checkpointId-geofence';
-        final checkpointCircleId = '$checkpointId-geofence-circle';
-
-        final checkpointPosition = marker.position;
-
+  void _listenForGeofenceEvents() {
+    Geolocator.getPositionStream().listen((Position position) {
+      for (var checkpoint in checkpoints) {
         final double distance = Geolocator.distanceBetween(
           position.latitude,
           position.longitude,
-          checkpointPosition.latitude,
-          checkpointPosition.longitude,
+          checkpoint.latitude,
+          checkpoint.longitude,
         );
 
-        if (distance <= 20) {
-          _showNotification('You are in $checkpointId');
-          _markers.remove(marker);
-          _markers.add(
-            marker.copyWith(
-              iconParam: BitmapDescriptor.defaultMarkerWithHue(
-                BitmapDescriptor.hueGreen,
-              ),
-            ),
-          );
-          _circles.removeWhere(
-              (circle) => circle.circleId.value == checkpointCircleId);
-        } else {
-          _showNotification('You have passed $checkpointId');
-          _markers.remove(marker);
-          _markers.add(
-            marker.copyWith(
-              iconParam: BitmapDescriptor.defaultMarkerWithHue(
-                BitmapDescriptor.hueBlue,
-              ),
-            ),
-          );
-          _circles.add(
-            Circle(
-              circleId: CircleId(checkpointCircleId),
-              center: checkpointPosition,
-              radius: 20,
-              fillColor: Colors.blue.withOpacity(0.2),
-              strokeColor: Colors.blue.withOpacity(0.4),
-              strokeWidth: 2,
-            ),
-          );
+        if (distance <= 15 && !checkpoint.isVisited) {
+          checkpoint.isVisited = true;
+          _showNotification('You are in ${checkpoint.name}');
+        } else if (distance > 15 && checkpoint.isVisited) {
+          checkpoint.isVisited = false;
+          _showNotification('You have passed ${checkpoint.name}');
         }
       }
     });
-  }
-
-  void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
   }
 
   @override
@@ -222,10 +170,30 @@ class _MapScreenState extends State<MapScreen> {
         markers: _markers,
         circles: _circles,
         initialCameraPosition: CameraPosition(
-          target: LatLng(2.273664, 102.446846),
+          target: _center,
           zoom: 18,
         ),
       ),
     );
   }
+}
+
+class Checkpoint {
+  final String name;
+  final double latitude;
+  final double longitude;
+  bool isVisited;
+
+  Checkpoint({
+    required this.name,
+    required this.latitude,
+    required this.longitude,
+    this.isVisited = false,
+  });
+
+    @override
+  String toString() {
+    return 'Checkpoint(name: $name, latitude: $latitude, longitude: $longitude)';
+  }
+  
 }

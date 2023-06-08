@@ -1,3 +1,4 @@
+import 'package:checkpoint_geofence/main.dart';
 import 'package:checkpoint_geofence/organizer/checkpoint_map.dart';
 import 'package:checkpoint_geofence/organizer/contestant_list.dart';
 import 'package:checkpoint_geofence/organizer/sos_map.dart';
@@ -42,7 +43,10 @@ class _OrganizerMenuState extends State<OrganizerMenu> {
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () {
-              // TODO: Implement logout functionality
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => MyApp()),
+              );
             },
           ),
         ],
