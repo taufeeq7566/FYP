@@ -1,4 +1,4 @@
-
+/*
 import 'dart:async';
 
 import 'package:checkpoint_geofence/models/checkpoint.dart';
@@ -197,4 +197,4 @@ void _showNotification(String message) async {
     });
   }
 }
-
+*/

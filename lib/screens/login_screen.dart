@@ -1,4 +1,5 @@
 import 'package:checkpoint_geofence/Forms/register.dart';
+import 'package:checkpoint_geofence/main.dart';
 import 'package:checkpoint_geofence/organizer/organizer_menu.dart';
 import 'package:checkpoint_geofence/screens/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,7 +11,9 @@ enum UserRole {
 }
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+
+  final List<Checkpoint> checkpoints;
+  const LoginScreen({Key? key, required this.checkpoints}) : super(key: key);
 
   @override
   _LoginScreenState createState() => _LoginScreenState();
@@ -94,14 +97,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                     ),
                     SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          _login();
-                        }
-                      },
-                      child: const Text('Login'),
-                    ),
+ElevatedButton(
+  onPressed: () {
+    if (_formKey.currentState!.validate()) {
+      _login(widget.checkpoints);
+    }
+  },
+  child: const Text('Login'),
+),
                     SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _register,
@@ -122,49 +125,50 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<void> _login() async {
-    try {
-      final String email = _emailController.text.trim();
-      final UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: _passwordController.text,
-      );
+Future<void> _login(List<Checkpoint> checkpoints) async {
+  try {
+    final String email = _emailController.text.trim();
+    final UserCredential userCredential =
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: email,
+      password: _passwordController.text,
+    );
 
-      final User? user = userCredential.user;
+    final User? user = userCredential.user;
 
-      if (user != null) {
-        // Logged in successfully, perform role-specific actions
-        switch (_selectedRole) {
-          case UserRole.contestant:
-            // Perform actions for contestant role
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => HomeScreen(),
-              ),
-            );
-            break;
-          case UserRole.organizer:
-            // Perform actions for organizer role
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => OrganizerMenu(),
-              ),
-            );
-            break;
-        }
-
-        // Clear the form
-        _formKey.currentState!.reset();
+    if (user != null) {
+      // Logged in successfully, perform role-specific actions
+      switch (_selectedRole) {
+        case UserRole.contestant:
+          // Perform actions for contestant role
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomeScreen(checkpoints: checkpoints),
+            ),
+          );
+          break;
+        case UserRole.organizer:
+          // Perform actions for organizer role
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OrganizerMenu(checkpoints: checkpoints),
+            ),
+          );
+          break;
       }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = e.message!;
-      });
+
+      // Clear the form
+      _formKey.currentState!.reset();
     }
+  } on FirebaseAuthException catch (e) {
+    setState(() {
+      _errorMessage = e.message!;
+    });
   }
+}
+
 
   Future<void> _register() async {
     showDialog(

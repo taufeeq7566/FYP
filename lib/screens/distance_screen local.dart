@@ -1,3 +1,4 @@
+/*
 import 'dart:async';
 
 import 'package:checkpoint_geofence/models/checkpoint.dart';
@@ -129,4 +130,4 @@ class _DistanceScreenState extends State<DistanceScreen> {
     );
   }
 }
-
+*/

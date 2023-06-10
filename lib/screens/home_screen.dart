@@ -7,33 +7,74 @@ import 'package:checkpoint_geofence/screens/map_screen.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
+  final List<Checkpoint> checkpoints;
+
+  HomeScreen({required this.checkpoints});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<MenuButton> _menuButtons = [
-    MenuButton(
-      label: 'Map',
-      icon: Icons.map,
-      screen: MapScreen(),
-    ),
-    MenuButton(
-      label: 'Distance',
-      icon: Icons.directions_run,
-      screen: DistanceScreen(),
-    ),
-    MenuButton(
-      label: 'Leaderboard',
-      icon: Icons.emoji_events,
-      screen: LeaderboardScreen(),
-    ),
-    MenuButton(
-      label: 'Finisher',
-      icon: Icons.check_circle,
-      screen: FinisherScreen(),
-    ),
-  ];
+  late List<MenuButton> _menuButtons;
+
+  @override
+  void initState() {
+    super.initState();
+    _menuButtons = [
+      MenuButton(
+        label: 'Map',
+        icon: Icons.map,
+        screen: MapScreen(checkpoints: widget.checkpoints),
+      ),
+      MenuButton(
+        label: 'Distance',
+        icon: Icons.directions_run,
+        onPressed: () => _startRace(),
+        screen: null,
+      ),
+      MenuButton(
+        label: 'Leaderboard',
+        icon: Icons.emoji_events,
+        screen: LeaderboardScreen(),
+      ),
+      MenuButton(
+        label: 'Finisher',
+        icon: Icons.check_circle,
+        screen: FinisherScreen(),
+      ),
+    ];
+  }
+
+  void _startRace() {
+    // Code to start the race
+    String userEmail = ''; // Retrieve the userEmail from wherever it is available
+    List<DistanceCheckpoint> distanceCheckpoints = widget.checkpoints.map((checkpoint) {
+      return DistanceCheckpoint(
+        name: checkpoint.name,
+        latitude: checkpoint.latitude,
+        longitude: checkpoint.longitude,
+        stopwatchTime: checkpoint.stopwatchTime,
+      );
+    }).toList();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DistanceScreen(
+          checkpoints: distanceCheckpoints,
+          userEmail: userEmail,
+          onRaceFinished: (userEmail) {
+            // Handle race finished with userEmail
+            // e.g., Update the state or perform any required actions
+            // based on the userEmail
+            print('Race finished for user: $userEmail');
+          },
+        ),
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -60,33 +101,35 @@ class _HomeScreenState extends State<HomeScreen> {
             childAspectRatio: 1.0,
             mainAxisSpacing: 16.0,
             crossAxisSpacing: 16.0,
-            children: [
-              ..._menuButtons.map((button) {
-                return InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => button.screen),
-                    );
-                  },
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        button.icon,
-                        size: 64.0,
-                      ),
-                      SizedBox(height: 8.0),
-                      Text(
-                        button.label,
-                        style: TextStyle(fontSize: 16.0),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ],
+  children: _menuButtons.map((button) {
+    return InkWell(
+      onTap: () {
+        if (button.onPressed != null) {
+          button.onPressed!(); // Invoke the onPressed callback
+        } else if (button.screen != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => button.screen!),
+          );
+        }
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            button.icon,
+            size: 64.0,
           ),
+          SizedBox(height: 8.0),
+          Text(
+            button.label,
+            style: TextStyle(fontSize: 16.0),
+          ),
+        ],
+      ),
+    );
+  }).toList(),
+),
           Positioned(
             bottom: 32.0,
             left: 0,
@@ -136,14 +179,17 @@ class _HomeScreenState extends State<HomeScreen> {
 class MenuButton {
   final String label;
   final IconData icon;
-  final Widget screen;
+  final Widget? screen;
+  final VoidCallback? onPressed;
 
   MenuButton({
     required this.label,
     required this.icon,
-    required this.screen,
+    this.screen,
+    this.onPressed,
   });
 }
+
 
 class MedicDialog extends StatelessWidget {
   @override
