@@ -6,6 +6,8 @@ import 'package:checkpoint_geofence/screens/leaderboard_screen.dart';
 import 'package:checkpoint_geofence/screens/map_screen.dart';
 import 'package:flutter/material.dart';
 
+import '../models/checkpoint.dart';
+
 class HomeScreen extends StatefulWidget {
   final List<Checkpoint> checkpoints;
 
@@ -54,7 +56,6 @@ class _HomeScreenState extends State<HomeScreen> {
         name: checkpoint.name,
         latitude: checkpoint.latitude,
         longitude: checkpoint.longitude,
-        stopwatchTime: checkpoint.stopwatchTime,
       );
     }).toList();
 

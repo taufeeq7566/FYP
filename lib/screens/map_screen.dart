@@ -1,10 +1,11 @@
 import 'dart:async';
 
-import 'package:checkpoint_geofence/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import '../models/checkpoint.dart';
 
 class MapScreen extends StatefulWidget {
   final List<Checkpoint> checkpoints;

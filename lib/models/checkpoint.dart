@@ -13,14 +13,14 @@ class Checkpoint {
     this.isVisited = false,
   });
 
-  factory Checkpoint.fromSnapshot(DataSnapshot snapshot) {
-    Map<dynamic, dynamic> data = snapshot.value as Map<dynamic, dynamic>;
-    return Checkpoint(
-      name: data['name'],
-      latitude: data['latitude'],
-      longitude: data['longitude'],
-    );
-  }
+factory Checkpoint.fromSnapshot(Map<dynamic, dynamic> data) {
+  return Checkpoint(
+    name: data['name'],
+    latitude: data['latitude'],
+    longitude: data['longitude'],
+  );
+}
+
 
   static Future<List<Checkpoint>> fetchCheckpointsFromDatabase() async {
     final DatabaseReference checkpointsRef =

@@ -5,6 +5,8 @@ import 'package:checkpoint_geofence/organizer/sos_map.dart';
 import 'package:checkpoint_geofence/screens/finisher_screen.dart';
 import 'package:flutter/material.dart';
 
+import '../models/checkpoint.dart';
+
 class OrganizerMenu extends StatefulWidget {
   final List<Checkpoint> checkpoints;
 

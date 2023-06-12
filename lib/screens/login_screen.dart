@@ -1,9 +1,10 @@
 import 'package:checkpoint_geofence/Forms/register.dart';
-import 'package:checkpoint_geofence/main.dart';
 import 'package:checkpoint_geofence/organizer/organizer_menu.dart';
 import 'package:checkpoint_geofence/screens/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
+import '../models/checkpoint.dart';
 
 enum UserRole {
   contestant,

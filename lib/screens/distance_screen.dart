@@ -48,22 +48,26 @@ class _DistanceScreenState extends State<DistanceScreen> {
     _retrieveCheckpoints();
     _stopwatch = Stopwatch();
     _retrieveFullName();
+
+  print('Before retrieving full name');
+  _retrieveFullName();
+  print('After retrieving full name');
   }
 
   @override
   void dispose() {
     super.dispose();
+    _stopDistanceUpdates();
   }
 
   void _getCurrentLocation() async {
     final position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
-      setState(() {
-        _currentPosition = position;
-  });
-    }
-  
+    setState(() {
+      _currentPosition = position;
+    });
+  }
 
   void _startDistanceUpdates() {
     if (_timer == null || !_timer!.isActive) {
@@ -108,183 +112,212 @@ class _DistanceScreenState extends State<DistanceScreen> {
     });
   }
 
-  void _calculateDistance() {
-    List<double> updatedDistances = List<double>.filled(checkpoints.length, 0.0);
-
-    for (int i = 0; i < checkpoints.length; i++) {
-      DistanceCheckpoint checkpoint = checkpoints[i];
-      double distance = Geolocator.distanceBetween(
-        _currentPosition.latitude,
-        _currentPosition.longitude,
-        checkpoint.latitude,
-        checkpoint.longitude,
-      );
-
-      String formattedDistance = distance.toStringAsFixed(2);
-      updatedDistances[i] = distance;
-
-      print('Distance to ${checkpoint.name}: $formattedDistance meters');
-
-      if (distance <= 7 && !_isRaceFinished) {
-        print('User is within the geofence of ${checkpoint.name}');
-
-        if (checkpoint.name == 'Starting Line') {
-          _startRace();
-        } else if (checkpoint.name == 'Finish Line') {
-          _stopRace();
-          _uploadLeaderboard();
-        } else {
-          setState(() {
-            // Update the stopwatch time for the current checkpoint
-            checkpoint.stopwatchTime = _stopwatch.elapsed;
-          });
-        }
-      }
-    }
-
-    setState(() {
-      distances = updatedDistances;
-    });
-  }
-
-void _uploadLeaderboard() {
-  DatabaseReference leaderboardRef =
-      FirebaseDatabase.instance.reference().child('leaderboard');
+void _calculateDistance() {
+  List<double> updatedDistances = List<double>.filled(checkpoints.length, 0.0);
+  bool isRaceStarted = false;
 
   for (int i = 0; i < checkpoints.length; i++) {
     DistanceCheckpoint checkpoint = checkpoints[i];
-    Duration? stopwatchTime = checkpoint.stopwatchTime;
+    double distance = Geolocator.distanceBetween(
+      _currentPosition.latitude,
+      _currentPosition.longitude,
+      checkpoint.latitude,
+      checkpoint.longitude,
+    );
 
-    if (stopwatchTime != null) {
-      String formattedStopwatchTime = _formatDuration(stopwatchTime);
-      String checkpointKey = 'checkpoint${i + 1}';
+    String formattedDistance = distance.toStringAsFixed(2);
+    updatedDistances[i] = distance;
 
-      Map<String, String> leaderboardData = {
-        checkpointKey: formattedStopwatchTime,
-      };
+    print('Distance to ${checkpoint.name}: $formattedDistance meters');
 
-      leaderboardRef.child(_userFullName).update(leaderboardData).then((_) {
-        print('Leaderboard data uploaded for $checkpointKey');
-      }).catchError((error) {
-        print('Failed to upload leaderboard data for $checkpointKey: $error');
-      });
+    if (checkpoint.name == 'Starting Line' && distance <= 15 && !_isRaceFinished) {
+      // Start the stopwatch
+      _stopwatch.start();
+      isRaceStarted = true;
+    } else if (distance <= 15 && !_isRaceFinished) {
+      // Update the stopwatch time for all checkpoints passed through
+      checkpoint.stopwatchTime = _stopwatch.elapsed;
     }
   }
+
+  setState(() {
+    distances = updatedDistances;
+  });
+
+  _checkRaceFinished();
 }
 
 
 
-  void _startRace() {
-    setState(() {
-      _isRaceFinished = false;
-      _stopwatch.start();
-    });
+
+
+void _checkRaceFinished() {
+  bool raceFinished = checkpoints
+      .where((checkpoint) => checkpoint.name != 'Finish Line')
+      .every((checkpoint) => checkpoint.stopwatchTime != null);
+
+  if (raceFinished && !_isRaceFinished) {
+    _isRaceFinished = true;
+    _stopwatch.stop();
+    String formattedTime = _formatDuration(_stopwatch.elapsed);
+    widget.onRaceFinished(formattedTime);
+    print('Race finished for user: $formattedTime');
+
+    // Uncomment the following line if you want to show the stopwatch time under each checkpoint
+    // after the race is finished.
+    // setState(() {});
+
+    return; // Exit the method after the race is finished
   }
 
-  void _stopRace() {
-    widget.onRaceFinished(widget.userEmail);
-    setState(() {
-      _isRaceFinished = true;
-      _stopwatch.stop();
-    });
+  _calculateDistance();
+}
+
+
+  
+String _formatDuration(Duration duration) {
+  String twoDigits(int n) {
+    if (n >= 10) return "$n";
+    return "0$n";
   }
+
+  String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+  String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+  String twoDigitMilliseconds = twoDigits((duration.inMilliseconds.remainder(1000) ~/ 10));
+
+  return "$twoDigitMinutes:$twoDigitSeconds.$twoDigitMilliseconds";
+}
+
+
 
   void _retrieveFullName() {
-    DatabaseReference userRef =
-        FirebaseDatabase.instance.reference().child('users');
+    DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users');
+    userRef.child('email').child(widget.userEmail).once().then((event) {
 
-    userRef.child(widget.userEmail).once().then((event) {
       final snapshot = event.snapshot;
       if (snapshot.value != null) {
-        String? fullName = snapshot.value as String?;
-        if (fullName != null) {
-          setState(() {
-            _userFullName = fullName;
-          });
-        }
+        Map<dynamic, dynamic> data = snapshot.value as Map<dynamic, dynamic>;
+        String fullName = data['fullname'];
+
+        setState(() {
+          _userFullName = fullName;
+        });
+        print('Retrieved full name: $fullName');
       }
     }).catchError((error) {
-      print("Failed to fetch user's full name: $error");
+      print("Failed to retrieve user's full name: $error");
     });
   }
 
-  String _formatDuration(Duration duration) {
-    String minutes =
-        duration.inMinutes.remainder(60).toString().padLeft(2, '0');
-    String seconds =
-        duration.inSeconds.remainder(60).toString().padLeft(2, '0');
-    String milliseconds =
-        (duration.inMilliseconds.remainder(1000) ~/ 10).toString().padLeft(2, '0');
+  void _uploadLeaderboard() {
+    DatabaseReference leaderboardRef =
+        FirebaseDatabase.instance.reference().child('leaderboard');
 
-    return '$minutes:$seconds:$milliseconds';
+    for (int i = 0; i < checkpoints.length; i++) {
+      DistanceCheckpoint checkpoint = checkpoints[i];
+      Duration? stopwatchTime = checkpoint.stopwatchTime;
+
+      if (stopwatchTime != null) {
+        String formattedStopwatchTime = _formatDuration(stopwatchTime);
+        String checkpointKey = 'checkpoint${i + 1}';
+
+        Map<String, String> leaderboardData = {
+          checkpointKey: formattedStopwatchTime,
+        };
+
+        leaderboardRef
+            .child(_userFullName)
+            .update(leaderboardData)
+            .then((_) {
+          print('Leaderboard data uploaded for $checkpointKey');
+        }).catchError((error) {
+          print('Failed to upload leaderboard data for $checkpointKey: $error');
+        });
+      }
+    }
   }
 
- @override
+  @override
   Widget build(BuildContext context) {
+    String raceStatus = _isRaceFinished ? 'Race Finished' : 'Race in progress';
+    if (_isRaceFinished && checkpoints.any((checkpoint) => checkpoint.stopwatchTime == null)) {
+      raceStatus = 'Race in progress';
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Distance Screen'),
+        title: Text('Distance Race'),
       ),
-      body: Center(
+      body: Container(
+        padding: EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Current Location:',
-              style: TextStyle(fontSize: 18),
-            ),
-            SizedBox(height: 10),
-            Text(
-              'Latitude: ${_currentPosition.latitude}',
-              style: TextStyle(fontSize: 16),
-            ),
-            Text(
-              'Longitude: ${_currentPosition.longitude}',
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 20),
-            if (_isRaceFinished)
-              Text(
-                'Race Finished',
-                style: TextStyle(fontSize: 18),
-              )
-            else
-              Column(
-                children: [
-                  Text(
-                    'Race in progress',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Time: ${_formatDuration(_stopwatch.elapsed)}',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                ],
-              ),
-            SizedBox(height: 20),
-            Text(
-              'Distances to Checkpoints:',
-              style: TextStyle(fontSize: 18),
-            ),
-            SizedBox(height: 10),
-            for (int i = 0; i < checkpoints.length; i++)
-              Column(
-                children: [
-                  Text(
-                    '${checkpoints[i].name}: ${distances[i].toStringAsFixed(2)} meters',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  if (checkpoints[i].stopwatchTime != null)
-                    Text(
-                      'Time: ${_formatDuration(checkpoints[i].stopwatchTime!)}',
-                      style: TextStyle(fontSize: 16),
+  crossAxisAlignment: CrossAxisAlignment.stretch,
+  children: [
+    Text(
+      'Checkpoints:',
+      style: TextStyle(
+        fontSize: 20.0,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    SizedBox(height: 8.0),
+    Text(
+      'Stopwatch: ${_formatDuration(_stopwatch.elapsed)}',
+      style: TextStyle(
+        fontSize: 16.0,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    SizedBox(height: 8.0),  // Add some spacing
+    Text(
+      'User: $_userFullName',
+      style: TextStyle(
+        fontSize: 16.0,
+      ),
+    ),
+    SizedBox(height: 16.0),
+            Expanded(
+              child: ListView.builder(
+                itemCount: checkpoints.length,
+                itemBuilder: (context, index) {
+                  DistanceCheckpoint checkpoint = checkpoints[index];
+                  double distance = distances.isNotEmpty ? distances[index] : 0.0;
+
+                  String formattedDistance = distance.toStringAsFixed(2);
+                  String distanceText = 'Distance: $formattedDistance meters';
+
+                  String stopwatchTimeText = checkpoint.stopwatchTime != null
+                      ? 'Time: ${_formatDuration(checkpoint.stopwatchTime!)}'
+                      : '';
+
+                  return ListTile(
+                    title: Text(checkpoint.name),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(distanceText),
+                        Text(stopwatchTimeText),
+                      ],
                     ),
-                ],
+                    trailing: Text(raceStatus),
+                  );
+                },
               ),
+            ),
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          if (_stopwatch.isRunning) {
+            _stopwatch.stop();
+          } else {
+            _stopwatch.start();
+          }
+        },
+        child: Icon(_stopwatch.isRunning ? Icons.pause : Icons.play_arrow),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
