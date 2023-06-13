@@ -10,8 +10,9 @@ import '../models/checkpoint.dart';
 
 class HomeScreen extends StatefulWidget {
   final List<Checkpoint> checkpoints;
+  final String email;
 
-  HomeScreen({required this.checkpoints});
+  HomeScreen({required this.checkpoints, required this.email, Key? key}) : super(key: key);
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -49,13 +50,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _startRace() {
-    // Code to start the race
-    String userEmail = ''; // Retrieve the userEmail from wherever it is available
+    String userEmail = widget.email;
     List<DistanceCheckpoint> distanceCheckpoints = widget.checkpoints.map((checkpoint) {
       return DistanceCheckpoint(
         name: checkpoint.name,
         latitude: checkpoint.latitude,
         longitude: checkpoint.longitude,
+        stopwatchTime: null,
       );
     }).toList();
 
@@ -65,17 +66,12 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context) => DistanceScreen(
           checkpoints: distanceCheckpoints,
           userEmail: userEmail,
-          onRaceFinished: (userEmail) {
-            // Handle race finished with userEmail
-            // e.g., Update the state or perform any required actions
-            // based on the userEmail
-            print('Race finished for user: $userEmail');
-          },
         ),
       ),
     );
   }
 
+  // ...
 
   @override
   Widget build(BuildContext context) {
@@ -102,35 +98,35 @@ class _HomeScreenState extends State<HomeScreen> {
             childAspectRatio: 1.0,
             mainAxisSpacing: 16.0,
             crossAxisSpacing: 16.0,
-  children: _menuButtons.map((button) {
-    return InkWell(
-      onTap: () {
-        if (button.onPressed != null) {
-          button.onPressed!(); // Invoke the onPressed callback
-        } else if (button.screen != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => button.screen!),
-          );
-        }
-      },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            button.icon,
-            size: 64.0,
+            children: _menuButtons.map((button) {
+              return InkWell(
+                onTap: () {
+                  if (button.onPressed != null) {
+                    button.onPressed!(); // Invoke the onPressed callback
+                  } else if (button.screen != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => button.screen!),
+                    );
+                  }
+                },
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      button.icon,
+                      size: 64.0,
+                    ),
+                    SizedBox(height: 8.0),
+                    Text(
+                      button.label,
+                      style: TextStyle(fontSize: 16.0),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
           ),
-          SizedBox(height: 8.0),
-          Text(
-            button.label,
-            style: TextStyle(fontSize: 16.0),
-          ),
-        ],
-      ),
-    );
-  }).toList(),
-),
           Positioned(
             bottom: 32.0,
             left: 0,
@@ -190,7 +186,6 @@ class MenuButton {
     this.onPressed,
   });
 }
-
 
 class MedicDialog extends StatelessWidget {
   @override

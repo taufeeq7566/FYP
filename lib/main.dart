@@ -1,4 +1,4 @@
-import 'package:checkpoint_geofence/screens/home_screen.dart';
+import 'package:checkpoint_geofence/spectator/spectator_menu.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -76,7 +76,7 @@ class MyHomePage extends StatelessWidget {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => HomeScreen(checkpoints: checkpoints),
+                    builder: (context) => SpectatorMenu(),
                   ),
                 );
               },
