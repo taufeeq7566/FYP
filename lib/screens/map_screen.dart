@@ -41,9 +41,12 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _startLocationUpdates() {
-    Timer.periodic(const Duration(seconds: 2), (_) {
-      _getCurrentLocation();
-    });
+  _getCurrentLocation(); // Initial location update
+
+  // Continuously update location
+  _positionStreamSubscription = Geolocator.getPositionStream().listen((Position position) {
+    _getCurrentLocation();
+  });
   }
 
   void _getCurrentLocation() async {
@@ -107,19 +110,24 @@ void _listenForGeofenceEvents() {
       );
 
       if (distance <= _radius && !checkpoint.isVisited) {
-        setState(() {
-          checkpoint.isVisited = true;
-        });
+        if (mounted) {
+          setState(() {
+            checkpoint.isVisited = true;
+          });
+        }
         _showNotification('You are in ${checkpoint.name}');
       } else if (distance > _radius && checkpoint.isVisited) {
-        setState(() {
-          checkpoint.isVisited = false;
-        });
+        if (mounted) {
+          setState(() {
+            checkpoint.isVisited = false;
+          });
+        }
         _showNotification('You have passed ${checkpoint.name}');
       }
     }
   });
 }
+
 
 
 
@@ -164,12 +172,11 @@ void _listenForGeofenceEvents() {
     );
   }
 
-/*  @override
+@override
   void dispose() {
   mapController.dispose();
   _positionStreamSubscription?.cancel();
   super.dispose();
 }
-*/
 }
 
