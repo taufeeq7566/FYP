@@ -75,21 +75,15 @@ checkpoints.forEach((checkpoint, checkpointTime) {
     });
 
 leaderboard.sort((a, b) {
-  // If the first entry has the "Starting Line" checkpoint, it should be first
-  if (a.checkpointEntries[0].checkpoint == 'Starting Line') {
-    // If the second entry also has the "Starting Line" checkpoint, compare their last checkpoint times
-    if (b.checkpointEntries[0].checkpoint == 'Starting Line') {
-      return a.lastCheckpointTime.compareTo(b.lastCheckpointTime);
-    }
-    return -1; // First entry has the "Starting Line" checkpoint, so it should be first
+  if (a.checkpointEntries.length != b.checkpointEntries.length) {
+    // Sort based on the number of checkpoint entries
+    return a.checkpointEntries.length.compareTo(b.checkpointEntries.length);
+  } else {
+    // If the number of checkpoint entries is the same, compare their last checkpoint times
+    return a.lastCheckpointTime.compareTo(b.lastCheckpointTime);
   }
-  // If the second entry has the "Starting Line" checkpoint, it should be first
-  else if (b.checkpointEntries[0].checkpoint == 'Starting Line') {
-    return 1;
-  }
-  // Sort based on the number of checkpoint entries
-  return a.checkpointEntries.length.compareTo(b.checkpointEntries.length);
 });
+
 
 
 
@@ -120,7 +114,45 @@ Widget build(BuildContext context) {
         itemCount: _leaderboardData.length,
         itemBuilder: (context, index) {
           LeaderboardEntry entry = _leaderboardData[index];
+          int rank = index + 1;
+          String medalImage = '';
+
+          if (rank == 1) {
+            medalImage = 'lib/assets/picture_assets/medalG.png';
+          } else if (rank == 2) {
+            medalImage = 'lib/assets/picture_assets/medalS.png';
+          } else if (rank == 3) {
+            medalImage = 'lib/assets/picture_assets/medalB.png';
+          }
+
+          Widget rankWidget;
+          if (rank <= 3) {
+            rankWidget = SizedBox(
+              width: 55,
+              height: 55,
+              child: Image.asset(
+                medalImage,
+                fit: BoxFit.contain,
+              ),
+            );
+          } else {
+            rankWidget = SizedBox(
+              width: 55,
+              height: 55,
+              child: Center(
+                child: Text(
+                  rank.toString(),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                  ),
+                ),
+              ),
+            );
+          }
+
           return ListTile(
+            leading: rankWidget,
             title: Text(entry.fullName),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,7 +160,8 @@ Widget build(BuildContext context) {
                 return Text('${checkpointEntry.checkpoint}: ${checkpointEntry.checkpointTime}');
               }).toList(),
             ),
-            trailing: Text('Rank: ${index + 1}'),
+            trailing: Text('Rank: $rank'),
+            contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
           );
         },
       ),
@@ -139,6 +172,7 @@ Widget build(BuildContext context) {
 
 
 }
+
 
 class LeaderboardEntry {
   final String fullName;
