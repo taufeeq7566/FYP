@@ -5,6 +5,7 @@ class Checkpoint {
   final double latitude;
   final double longitude;
   bool isVisited;
+  double radius = 15.0;
 
   Checkpoint({
     required this.name,

@@ -1,27 +1,38 @@
-
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+class StopwatchManager {
+  static final StopwatchManager _instance = StopwatchManager._internal();
 
-class StopwatchModel extends ChangeNotifier {
-  Stopwatch _stopwatch = Stopwatch();
-  Duration _elapsedTime = Duration.zero;
-
-  StopwatchModel() {
-    _startStopwatch();
+  factory StopwatchManager() {
+    return _instance;
   }
 
-  Duration get elapsedTime => _elapsedTime;
+  Stopwatch _stopwatch = Stopwatch();
+  StreamController<Duration> _stopwatchController = StreamController<Duration>.broadcast();
 
-  void _startStopwatch() {
+  Stream<Duration> get stopwatchStream => _stopwatchController.stream;
+
+  StopwatchManager._internal();
+
+  void startStopwatch() {
     _stopwatch.start();
-    Timer.periodic(Duration(milliseconds: 10), (_) {
-      _elapsedTime = _stopwatch.elapsed;
-      notifyListeners();
-    });
+    _startTimer();
   }
 
   void stopStopwatch() {
     _stopwatch.stop();
+    _stopwatch.reset();
+  }
+
+  void _startTimer() {
+    Timer.periodic(const Duration(milliseconds: 1), (_) {
+      if (_stopwatch.isRunning) {
+        _stopwatchController.add(_stopwatch.elapsed);
+      }
+    });
+  }
+
+  void dispose() {
+    _stopwatchController.close();
   }
 }

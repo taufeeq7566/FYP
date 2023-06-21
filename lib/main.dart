@@ -1,7 +1,9 @@
 import 'package:checkpoint_geofence/spectator/spectator_menu.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
+import 'package:workmanager/workmanager.dart';
 
 import 'firebase_options.dart';
 import 'models/checkpoint.dart';
@@ -13,8 +15,52 @@ import 'screens/login_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  Workmanager workmanager = Workmanager();
+  await workmanager.initialize(callbackDispatcher);
+  await workmanager.registerPeriodicTask(
+    "geofence_task",
+    "geofenceTask",
+    initialDelay: Duration(seconds: 5),
+    frequency: Duration(minutes: 15),
+  );
   runApp(MyApp());
+
+  final checkpointProvider = CheckpointProvider();
+
+  Workmanager().initialize((taskName, inputData) => callbackDispatcher(checkpointProvider.checkpoints),
+      isInDebugMode: true);
 }
+
+
+
+void callbackDispatcher(List<Checkpoint> checkpoints) {
+  Workmanager workmanager = Workmanager();
+  workmanager.executeTask((taskName, inputData) {
+    if (taskName == "geofenceTask") {
+      // Perform geofence checks for each checkpoint using Geolocator.getPositionStream()
+      Geolocator.getPositionStream().listen((position) {
+        for (var checkpoint in checkpoints) {
+          final double distance = Geolocator.distanceBetween(
+            position.latitude,
+            position.longitude,
+            checkpoint.latitude,
+            checkpoint.longitude,
+          );
+
+          if (distance <= checkpoint.radius && !checkpoint.isVisited) {
+            // TODO: Handle geofence event when user enters checkpoint
+          } else if (distance > checkpoint.radius && checkpoint.isVisited) {
+            // TODO: Handle geofence event when user exits checkpoint
+          }
+        }
+      });
+    }
+
+    return Future.value(true);
+  });
+}
+
+
 
 class MyApp extends StatelessWidget {
   @override
