@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:workmanager/workmanager.dart';
 
 import '../models/checkpoint.dart';
 
@@ -34,7 +33,6 @@ class _MapScreenState extends State<MapScreen> {
     _startLocationUpdates();
     _initializeNotifications();
     _listenForGeofenceEvents();
-    _configureWorkManager();
   }
 
   void _onMapCreated(GoogleMapController controller) {
@@ -43,12 +41,12 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _startLocationUpdates() {
-    _getCurrentLocation(); // Initial location update
+  _getCurrentLocation(); // Initial location update
 
-    // Continuously update location
-    _positionStreamSubscription = Geolocator.getPositionStream().listen((Position position) {
-      _getCurrentLocation();
-    });
+  // Continuously update location
+  _positionStreamSubscription = Geolocator.getPositionStream().listen((Position position) {
+    _getCurrentLocation();
+  });
   }
 
   void _getCurrentLocation() async {
@@ -56,23 +54,23 @@ class _MapScreenState extends State<MapScreen> {
       desiredAccuracy: LocationAccuracy.high,
     );
 
-    if (this.mounted) {
-      setState(() {
-        // Remove the previous marker if it exists
-        if (_currentLocationMarker != null) {
-          _markers.remove(_currentLocationMarker);
-        }
-        // Add the new marker for the current location
-        _currentLocationMarker = Marker(
-          markerId: const MarkerId('current'),
-          position: LatLng(position.latitude, position.longitude),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed), // Set marker color to red
-          infoWindow: const InfoWindow(title: 'Your Current Location'),
-        );
+if (this.mounted){
+    setState(() {
+      // Remove the previous marker if it exists
+      if (_currentLocationMarker != null) {
+        _markers.remove(_currentLocationMarker);
+      }
+      // Add the new marker for the current location
+      _currentLocationMarker = Marker(
+        markerId: const MarkerId('current'),
+        position: LatLng(position.latitude, position.longitude),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed), // Set marker color to red
+        infoWindow: const InfoWindow(title: 'Your Current Location'),
+      );
 
-        _markers.add(_currentLocationMarker!);
-      });
-    }
+      _markers.add(_currentLocationMarker!);
+    });
+  }
   }
 
   void _initializeNotifications() {
@@ -102,74 +100,37 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  void _listenForGeofenceEvents() {
-    _positionStreamSubscription = Geolocator.getPositionStream().listen((Position position) {
-      for (var checkpoint in widget.checkpoints) {
-        final double distance = Geolocator.distanceBetween(
-          position.latitude,
-          position.longitude,
-          checkpoint.latitude,
-          checkpoint.longitude,
-        );
+void _listenForGeofenceEvents() {
+  _positionStreamSubscription = Geolocator.getPositionStream().listen((Position position) {
+    for (var checkpoint in widget.checkpoints) {
+      final double distance = Geolocator.distanceBetween(
+        position.latitude,
+        position.longitude,
+        checkpoint.latitude,
+        checkpoint.longitude,
+      );
 
-        if (distance <= _radius && !checkpoint.isVisited) {
-          if (mounted) {
-            setState(() {
-              checkpoint.isVisited = true;
-            });
-          }
-          _showNotification('You are in ${checkpoint.name}');
-        } else if (distance > _radius && checkpoint.isVisited) {
-          if (mounted) {
-            setState(() {
-              checkpoint.isVisited = false;
-            });
-          }
-          _showNotification('You have passed ${checkpoint.name}');
+      if (distance <= _radius && !checkpoint.isVisited) {
+        if (mounted) {
+          setState(() {
+            checkpoint.isVisited = true;
+          });
         }
+        _showNotification('You are in ${checkpoint.name}');
+      } else if (distance > _radius && checkpoint.isVisited) {
+        if (mounted) {
+          setState(() {
+            checkpoint.isVisited = false;
+          });
+        }
+        _showNotification('You have passed ${checkpoint.name}');
       }
-    });
-  }
-
-  void _configureWorkManager() {
-    Workmanager().initialize(
-      callbackDispatcher,
-      isInDebugMode: false,
-    );
-
-    Workmanager().registerPeriodicTask(
-      "geofence_task",
-      "geofenceTask",
-      initialDelay: Duration(seconds: 5),
-      frequency: Duration(minutes: 15),
-    );
-  }
-
-void callbackDispatcher(List<Checkpoint> checkpoints) {
-  Workmanager workmanager = Workmanager();
-  workmanager.executeTask((taskName, inputData) {
-    if (taskName == "geofenceTask") {
-      Geolocator.getPositionStream().listen((position) {
-        for (var checkpoint in checkpoints) {
-          final double distance = Geolocator.distanceBetween(
-            position.latitude,
-            position.longitude,
-            checkpoint.latitude,
-            checkpoint.longitude,
-          );
-
-          if (distance <= checkpoint.radius && !checkpoint.isVisited) {
-            // TODO: Handle geofence event when user enters checkpoint
-          } else if (distance > checkpoint.radius && checkpoint.isVisited) {
-            // TODO: Handle geofence event when user exits checkpoint
-          }
-        }
-      });
     }
-
-    return Future.value(true);
   });
 }
+
+
+
 
 
   @override
@@ -201,21 +162,22 @@ void callbackDispatcher(List<Checkpoint> checkpoints) {
         title: const Text('Map Screen'),
       ),
       body: GoogleMap(
-        onMapCreated: _onMapCreated,
-        markers: _markers,
-        circles: _circles,
-        initialCameraPosition: CameraPosition(
-          target: _center,
-          zoom: 18,
-        ),
-      ),
+  onMapCreated: _onMapCreated,
+  markers: _markers,
+  circles: _circles,
+  initialCameraPosition: CameraPosition(
+    target: _center,
+    zoom: 18,
+  ),
+)
     );
   }
 
-  @override
+@override
   void dispose() {
-    mapController.dispose();
-    _positionStreamSubscription?.cancel();
-    super.dispose();
-  }
+  mapController.dispose();
+  //_positionStreamSubscription?.cancel();
+  super.dispose();
 }
+}
+

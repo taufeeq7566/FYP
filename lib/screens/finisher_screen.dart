@@ -1,6 +1,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
+
 class FinisherScreen extends StatefulWidget {
   @override
   _FinisherScreenState createState() => _FinisherScreenState();
@@ -58,28 +59,42 @@ class _FinisherScreenState extends State<FinisherScreen> {
   }
 
 @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: Text('Finishers'),
-    ),
-    body: ListView.builder(
-      itemCount: _finishers.length,
-      itemBuilder: (context, index) {
-        String fullName = _finishers[index];
-        return ListTile(
-          title: Text(
-            fullName,
-            style: TextStyle(
-              fontSize: 20, // Adjust the font size as desired
-              fontWeight: FontWeight.bold, // Make the font bold
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Finishers'),
+        backgroundColor: Colors.purple,
+      ),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.7, // Adjust the opacity as desired
+              child: Image.asset(
+                'lib/assets/picture_assets/Finisher_background.png',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
-          leading: Icon(Icons.emoji_events), // Add the trophy icon
-        );
-      },
-    ),
-  );
-}
-
+          ListView.builder(
+            itemCount: _finishers.length,
+            itemBuilder: (context, index) {
+              String fullName = _finishers[index];
+              return ListTile(
+                title: Text(
+                  fullName,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                leading: Icon(Icons.emoji_events),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }

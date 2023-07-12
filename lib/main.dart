@@ -1,9 +1,8 @@
+import 'package:checkpoint_geofence/models/contestant_provider.dart';
 import 'package:checkpoint_geofence/spectator/spectator_menu.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
-import 'package:workmanager/workmanager.dart';
 
 import 'firebase_options.dart';
 import 'models/checkpoint.dart';
@@ -15,58 +14,18 @@ import 'screens/login_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  Workmanager workmanager = Workmanager();
-  await workmanager.initialize(callbackDispatcher);
-  await workmanager.registerPeriodicTask(
-    "geofence_task",
-    "geofenceTask",
-    initialDelay: Duration(seconds: 5),
-    frequency: Duration(minutes: 15),
-  );
+
   runApp(MyApp());
-
-  final checkpointProvider = CheckpointProvider();
-
-  Workmanager().initialize((taskName, inputData) => callbackDispatcher(checkpointProvider.checkpoints),
-      isInDebugMode: true);
 }
-
-
-
-void callbackDispatcher(List<Checkpoint> checkpoints) {
-  Workmanager workmanager = Workmanager();
-  workmanager.executeTask((taskName, inputData) {
-    if (taskName == "geofenceTask") {
-      // Perform geofence checks for each checkpoint using Geolocator.getPositionStream()
-      Geolocator.getPositionStream().listen((position) {
-        for (var checkpoint in checkpoints) {
-          final double distance = Geolocator.distanceBetween(
-            position.latitude,
-            position.longitude,
-            checkpoint.latitude,
-            checkpoint.longitude,
-          );
-
-          if (distance <= checkpoint.radius && !checkpoint.isVisited) {
-            // TODO: Handle geofence event when user enters checkpoint
-          } else if (distance > checkpoint.radius && checkpoint.isVisited) {
-            // TODO: Handle geofence event when user exits checkpoint
-          }
-        }
-      });
-    }
-
-    return Future.value(true);
-  });
-}
-
-
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => CheckpointProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CheckpointProvider()),
+        ChangeNotifierProvider(create: (_) => ContestantProvider()), // Add the ContestantProvider
+      ],
       child: Consumer<CheckpointProvider>(
         builder: (context, checkpointProvider, _) {
           return MaterialApp(
@@ -88,50 +47,96 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    List<Checkpoint> checkpoints = Provider.of<CheckpointProvider>(context).checkpoints;
+    List<Checkpoint> checkpoints =
+        Provider.of<CheckpointProvider>(context).checkpoints;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Marathon App"),
+    return MaterialApp(
+      title: 'Marathon App',
+      theme: ThemeData(
+        primaryColor: Colors.black,
+        hintColor: Colors.purple,
+        scaffoldBackgroundColor: Colors.transparent,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                requestLocationAndCameraPermissions().then((granted) {
-                  if (granted) {
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            "Marathon App",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.purple,
+        ),
+        body: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('lib/assets/picture_assets/running_silhouette.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    requestLocationAndCameraPermissions().then((granted) {
+                      if (granted) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                LoginScreen(checkpoints: checkpoints),
+                          ),
+                        );
+                      }
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.purple,
+                    elevation: 3,
+                    minimumSize: Size(200, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    textStyle: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text(
+                    "Login as User",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => LoginScreen(checkpoints: checkpoints),
+                        builder: (context) => SpectatorMenu(),
                       ),
                     );
-                  }
-                });
-              },
-              child: const Text(
-                "Login as User",
-                style: TextStyle(fontSize: 16),
-              ),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SpectatorMenu(),
+                  },
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.purple,
+                    elevation: 3,
+                    minimumSize: Size(200, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    textStyle: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                );
-              },
-              child: const Text(
-                "Login as Spectator",
-                style: TextStyle(fontSize: 16),
-              ),
+                  child: const Text(
+                    "Login as Spectator",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

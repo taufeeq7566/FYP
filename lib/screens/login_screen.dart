@@ -1,11 +1,11 @@
-import 'package:checkpoint_geofence/Forms/register.dart';
-import 'package:checkpoint_geofence/main.dart';
-import 'package:checkpoint_geofence/organizer/organizer_menu.dart';
-import 'package:checkpoint_geofence/screens/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../Forms/register.dart';
+import '../main.dart';
 import '../models/checkpoint.dart';
+import '../organizer/organizer_menu.dart';
+import '../screens/home_screen.dart';
 
 enum UserRole {
   contestant,
@@ -33,105 +33,180 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Login Screen'),
-      leading: IconButton(
-  icon: Icon(Icons.arrow_back),
-  onPressed: () {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => MyApp()),
-    );
-  },
-),
-
+        backgroundColor: Colors.purple,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => MyApp()),
+            );
+          },
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Container(
-              height: 150,
-              alignment: Alignment.center,
-              child: Image.asset(
-                'lib/assets/picture_assets/loginlogo.png',
-                width: 200,
-                height: 150,
-              ),
-            ),
-            Expanded(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: InputDecoration(labelText: 'Email'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
-                        }
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: _passwordController,
-                      decoration: InputDecoration(labelText: 'Password'),
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
-                        }
-                        return null;
-                      },
-                    ),
-                    DropdownButtonFormField<UserRole>(
-                      value: _selectedRole,
-                      items: [
-                        DropdownMenuItem<UserRole>(
-                          value: UserRole.contestant,
-                          child: const Text('Contestant'),
+      body: Container(
+        color: Colors.black, // Set the background color to black
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Container(
+                    padding: const EdgeInsets.all(70.0),
+                    child: Column(
+                      children: [
+                        Container(
+                          height: 150,
+                          alignment: Alignment.center,
+                          child: Image.asset(
+                            'lib/assets/picture_assets/loginlogo.png',
+                            width: 250,
+                            height: 350,
+                          ),
                         ),
-                        DropdownMenuItem<UserRole>(
-                          value: UserRole.organizer,
-                          child: const Text('Organizer'),
+                        SizedBox(height: 16),
+                        Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              TextFormField(
+                                controller: _emailController,
+                                decoration: InputDecoration(
+                                  labelText: 'Email',
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 18.0,
+                                    horizontal: 16.0,
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter your email';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              SizedBox(height: 8),
+                              TextFormField(
+                                controller: _passwordController,
+                                decoration: InputDecoration(
+                                  labelText: 'Password',
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 16.0,
+                                    horizontal: 16.0,
+                                  ),
+                                ),
+                                obscureText: true,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter your password';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              SizedBox(height: 8),
+                              DropdownButtonFormField<UserRole>(
+                                value: _selectedRole,
+                                items: [
+                                  DropdownMenuItem<UserRole>(
+                                    value: UserRole.contestant,
+                                    child: const Text('Contestant'),
+                                  ),
+                                  DropdownMenuItem<UserRole>(
+                                    value: UserRole.organizer,
+                                    child: const Text('Organizer'),
+                                  ),
+                                ],
+                                onChanged: (UserRole? value) {
+                                  setState(() {
+                                    _selectedRole = value;
+                                  });
+                                },
+                                decoration: InputDecoration(
+                                  labelText: 'Role',
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 16.0,
+                                    horizontal: 16.0,
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null) {
+                                    return 'Please select a role';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              SizedBox(height: 16),
+                              SizedBox(
+                                width: 100,
+                                height: 40,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    if (_formKey.currentState!.validate()) {
+                                      _login();
+                                    }
+                                  },
+                                  child: const Text('Login'),
+                                  style: ElevatedButton.styleFrom(
+                                    primary: Colors.purple,
+                                    textStyle: TextStyle(fontSize: 15),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              SizedBox(
+                                width: 100,
+                                height: 40,
+                                child: ElevatedButton(
+                                  onPressed: _register,
+                                  child: const Text('Register'),
+                                  style: ElevatedButton.styleFrom(
+                                    primary: Colors.purple,
+                                    textStyle: TextStyle(fontSize: 15),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              if (_errorMessage.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: Text(
+                                    _errorMessage,
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                       ],
-                      onChanged: (UserRole? value) {
-                        setState(() {
-                          _selectedRole = value;
-                        });
-                      },
-                      decoration: const InputDecoration(labelText: 'Role'),
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Please select a role';
-                        }
-                        return null;
-                      },
                     ),
-                    SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          _login();
-                        }
-                      },
-                      child: const Text('Login'),
-                    ),
-                    SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _register,
-                      child: const Text('Register'),
-                    ),
-                    if (_errorMessage.isNotEmpty)
-                      Text(
-                        _errorMessage,
-                        style: TextStyle(color: Colors.red),
-                      ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

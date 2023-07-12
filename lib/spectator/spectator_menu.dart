@@ -10,54 +10,69 @@ class SpectatorMenu extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Spectator Menu'),
+        backgroundColor: Colors.purple,
         actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () {
+          GestureDetector(
+            onTap: () {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => MyApp()),
               );
             },
+            child: Container(
+              padding: EdgeInsets.all(12.0),
+              child: Image.asset(
+                'lib/assets/picture_assets/logout.png',
+                width: 30.0,
+                height: 30.0,
+              ),
+            ),
           ),
         ],
       ),
-      body: GridView.count(
-        crossAxisCount: 2,
-        padding: EdgeInsets.all(16.0),
-        childAspectRatio: 1.0,
-        mainAxisSpacing: 16.0,
-        crossAxisSpacing: 16.0,
-        children: [
-          MenuButton(
-            label: 'View Checkpoints on Map',
-            icon: Icons.map,
-            screen: SpectatorMapScreen(),
+      body: Container(
+        color: Colors.black,
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                MenuButton(
+                  label: 'Checkpoints Map',
+                  iconAsset: 'lib/assets/picture_assets/checkpoint map.png',
+                  screen: SpectatorMapScreen(),
+                ),
+                SizedBox(height: 20.0),
+                MenuButton(
+                  label: 'Leaderboard Page',
+                  iconAsset: 'lib/assets/picture_assets/leaderboard icon.png',
+                  screen: LeaderboardScreen(),
+                ),
+                SizedBox(height: 20.0),
+                MenuButton(
+                  label: 'Finishers Page',
+                  iconAsset: 'lib/assets/picture_assets/Finisher.png',
+                  screen: FinisherScreen(),
+                ),
+              ],
+            ),
           ),
-          MenuButton(
-            label: 'View Leaderboard',
-            icon: Icons.leaderboard,
-            screen: LeaderboardScreen(),
-          ),
-          MenuButton(
-            label: 'View Finishers',
-            icon: Icons.done_all,
-            screen: FinisherScreen(),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
+
 class MenuButton extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final String iconAsset;
   final Widget? screen;
 
   const MenuButton({
     required this.label,
-    required this.icon,
+    required this.iconAsset,
     this.screen,
   });
 
@@ -72,20 +87,40 @@ class MenuButton extends StatelessWidget {
           );
         }
       },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 64.0,
-          ),
-          SizedBox(height: 8.0),
-          Text(
-            label,
-            style: TextStyle(fontSize: 16.0),
-          ),
-        ],
+      child: Container(
+
+        decoration: BoxDecoration(
+          color: Colors.purple,
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        padding: EdgeInsets.all(12.0),
+        margin: EdgeInsets.symmetric(vertical: 8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              iconAsset,
+              width: 100.0,
+              height: 100.0,
+            ),
+            SizedBox(width: 12.0),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 17.0,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+            ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
+
+
+
+

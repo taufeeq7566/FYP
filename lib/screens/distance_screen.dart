@@ -1,14 +1,15 @@
 import 'dart:async';
 
-import 'package:checkpoint_geofence/models/stopwatch.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
+//import 'package:checkpoint_geofence/models/stopwatch.dart';
+
 class DistanceScreen extends StatefulWidget {
   final List<DistanceCheckpoint> checkpoints;
   final String userEmail;
-  final StopwatchManager _stopwatchManager = StopwatchManager();
+  //final StopwatchManager _stopwatchManager = StopwatchManager();
 
 
   DistanceScreen({required this.checkpoints, required this.userEmail});
@@ -50,7 +51,7 @@ class _DistanceScreenState extends State<DistanceScreen> {
   @override
   void dispose() {
     _timer.cancel();
-    stopwatch.stop();
+    //stopwatch.stop();
     super.dispose();
   }
 
