@@ -18,6 +18,7 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   late GoogleMapController mapController;
+  final Completer<GoogleMapController> _controller = Completer();
   Set<Marker> _markers = {};
   final Set<Circle> _circles = {};
   final LatLng _center = const LatLng(2.273664, 102.446846); // Center coordinate
@@ -27,26 +28,36 @@ class _MapScreenState extends State<MapScreen> {
       FlutterLocalNotificationsPlugin();
   StreamSubscription<Position>? _positionStreamSubscription;
 
+  List<String> themeOptions = [
+    'Standard',
+    'Retro',
+    'Dark',
+    'Aubergine',
+  ];
+  String _selectedTheme = 'Standard';
+  String _mapTheme = '';
+
   @override
   void initState() {
     super.initState();
+        DefaultAssetBundle.of(context)
+        .loadString('lib/assets/maptheme/standard_mode.json')
+        .then((value) {
+      _mapTheme = value;
+    });
     _startLocationUpdates();
     _initializeNotifications();
     _listenForGeofenceEvents();
-  }
-
-  void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
-    mapController.moveCamera(CameraUpdate.newLatLngZoom(_center, 18.0)); // Set initial camera position
+    _loadMapTheme();
   }
 
   void _startLocationUpdates() {
-  _getCurrentLocation(); // Initial location update
+    _getCurrentLocation(); // Initial location update
 
-  // Continuously update location
-  _positionStreamSubscription = Geolocator.getPositionStream().listen((Position position) {
-    _getCurrentLocation();
-  });
+    // Continuously update location
+    _positionStreamSubscription = Geolocator.getPositionStream().listen((Position position) {
+      _getCurrentLocation();
+    });
   }
 
   void _getCurrentLocation() async {
@@ -54,23 +65,23 @@ class _MapScreenState extends State<MapScreen> {
       desiredAccuracy: LocationAccuracy.high,
     );
 
-if (this.mounted){
-    setState(() {
-      // Remove the previous marker if it exists
-      if (_currentLocationMarker != null) {
-        _markers.remove(_currentLocationMarker);
-      }
-      // Add the new marker for the current location
-      _currentLocationMarker = Marker(
-        markerId: const MarkerId('current'),
-        position: LatLng(position.latitude, position.longitude),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed), // Set marker color to red
-        infoWindow: const InfoWindow(title: 'Your Current Location'),
-      );
+    if (this.mounted) {
+      setState(() {
+        // Remove the previous marker if it exists
+        if (_currentLocationMarker != null) {
+          _markers.remove(_currentLocationMarker);
+        }
+        // Add the new marker for the current location
+        _currentLocationMarker = Marker(
+          markerId: const MarkerId('current'),
+          position: LatLng(position.latitude, position.longitude),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed), // Set marker color to red
+          infoWindow: const InfoWindow(title: 'Your Current Location'),
+        );
 
-      _markers.add(_currentLocationMarker!);
-    });
-  }
+        _markers.add(_currentLocationMarker!);
+      });
+    }
   }
 
   void _initializeNotifications() {
@@ -100,38 +111,77 @@ if (this.mounted){
     );
   }
 
-void _listenForGeofenceEvents() {
-  _positionStreamSubscription = Geolocator.getPositionStream().listen((Position position) {
-    for (var checkpoint in widget.checkpoints) {
-      final double distance = Geolocator.distanceBetween(
-        position.latitude,
-        position.longitude,
-        checkpoint.latitude,
-        checkpoint.longitude,
-      );
+  void _listenForGeofenceEvents() {
+    _positionStreamSubscription = Geolocator.getPositionStream().listen((Position position) {
+      for (var checkpoint in widget.checkpoints) {
+        final double distance = Geolocator.distanceBetween(
+          position.latitude,
+          position.longitude,
+          checkpoint.latitude,
+          checkpoint.longitude,
+        );
 
-      if (distance <= _radius && !checkpoint.isVisited) {
-        if (mounted) {
-          setState(() {
-            checkpoint.isVisited = true;
-          });
+        if (distance <= _radius && !checkpoint.isVisited) {
+          if (mounted) {
+            setState(() {
+              checkpoint.isVisited = true;
+            });
+          }
+          _showNotification('You are in ${checkpoint.name}');
+        } else if (distance > _radius && checkpoint.isVisited) {
+          if (mounted) {
+            setState(() {
+              checkpoint.isVisited = false;
+            });
+          }
+          _showNotification('You have passed ${checkpoint.name}');
         }
-        _showNotification('You are in ${checkpoint.name}');
-      } else if (distance > _radius && checkpoint.isVisited) {
-        if (mounted) {
-          setState(() {
-            checkpoint.isVisited = false;
-          });
-        }
-        _showNotification('You have passed ${checkpoint.name}');
       }
+    });
+  }
+
+  void _loadMapTheme() async {
+    _mapTheme = await DefaultAssetBundle.of(context).loadString('lib/assets/maptheme/standard_mode.json');
+    _updateMapTheme();
+  }
+
+  void _updateMapTheme() async {
+    final GoogleMapController controller = await _controller.future;
+    controller.setMapStyle(_mapTheme);
+  }
+
+void _onThemeChanged(String? value) async {
+  if (value != null) {
+    setState(() {
+      _selectedTheme = value;
+    });
+
+    switch (value) {
+      case 'Retro':
+        // Load retro theme
+        _mapTheme = await DefaultAssetBundle.of(context)
+            .loadString('lib/assets/maptheme/retro_mode.json');
+        break;
+      case 'Standard':
+        // Load normal theme
+        _mapTheme = await DefaultAssetBundle.of(context)
+            .loadString('lib/assets/maptheme/standard_mode.json');
+        break;
+      case 'Dark':
+        // Load dark theme
+        _mapTheme = await DefaultAssetBundle.of(context)
+            .loadString('lib/assets/maptheme/dark_mode.json');
+        break;
+      case 'Aubergine':
+        // Load aubergine theme
+        _mapTheme = await DefaultAssetBundle.of(context)
+            .loadString('lib/assets/maptheme/aubergine_mode.json');
+        break;
     }
-  });
+
+    _updateMapTheme();
+  }
 }
-
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -159,25 +209,63 @@ void _listenForGeofenceEvents() {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Map Screen'),
+        title: const Text('Contestant Map'),
+        backgroundColor: Color(0xFFFC766A),
+        actions: [
+          Container(
+            padding: EdgeInsets.only(right: 16),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _selectedTheme,
+                onChanged: _onThemeChanged,
+                dropdownColor: Color(0xFFFC766A),
+                items: themeOptions.map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'lib/assets/picture_assets/theme.png',
+                          width: 31,
+                          height: 31,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          value,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ],
       ),
       body: GoogleMap(
-  onMapCreated: _onMapCreated,
-  markers: _markers,
-  circles: _circles,
-  initialCameraPosition: CameraPosition(
-    target: _center,
-    zoom: 18,
-  ),
-)
+        onMapCreated: (GoogleMapController controller) {
+          mapController = controller;
+          _controller.complete(controller);
+          _updateMapTheme();
+        },
+        markers: _markers,
+        circles: _circles,
+        initialCameraPosition: CameraPosition(
+          target: _center,
+          zoom: 18,
+        ),
+      ),
     );
   }
 
-@override
+  @override
   void dispose() {
-  mapController.dispose();
-  //_positionStreamSubscription?.cancel();
-  super.dispose();
+    //mapController.dispose();
+    //_positionStreamSubscription?.cancel();
+    super.dispose();
+  }
 }
-}
-

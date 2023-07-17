@@ -20,7 +20,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     _fetchLeaderboardData();
   }
 
-Future <void> _fetchLeaderboardData() async {
+Future<void> _fetchLeaderboardData() async {
   _databaseReference.onValue.listen((event) {
     final data = event.snapshot.value as Map<dynamic, dynamic>;
     List<LeaderboardEntry> leaderboard = [];
@@ -31,30 +31,28 @@ Future <void> _fetchLeaderboardData() async {
       List<CheckpointEntry> checkpointEntries = [];
       String? finishLineTime;
 
-checkpoints.forEach((checkpoint, checkpointTime) {
-  if (checkpointTime == '00:00:00') {
-    checkpointEntries.insert(
-      0,
-      CheckpointEntry(
-        checkpoint: 'Starting Line',
-        checkpointTime: checkpointTime,
-      ),
-    );
-  } else if (checkpointTime == checkpoints.values.last) {
-    finishLineTime = checkpointTime;
-  } else {
-    String checkpointName = 'Checkpoint ${checkpointEntries.length + 1}';
-    checkpointEntries.add(
-      CheckpointEntry(
-        checkpoint: checkpointName,
-        checkpointTime: checkpointTime,
-      ),
-    );
-  }
-});
+      checkpoints.forEach((checkpoint, checkpointTime) {
+        if (checkpointTime == '00:00:00') {
+          checkpointEntries.insert(
+            0,
+            CheckpointEntry(
+              checkpoint: 'Starting Line',
+              checkpointTime: checkpointTime,
+            ),
+          );
+        } else if (checkpointTime == checkpoints.values.last) {
+          finishLineTime = checkpointTime;
+        } else {
+          String checkpointName = 'Checkpoint ${checkpointEntries.length + 1}';
+          checkpointEntries.add(
+            CheckpointEntry(
+              checkpoint: checkpointName,
+              checkpointTime: checkpointTime,
+            ),
+          );
+        }
+      });
 
-
-      // Sort the checkpoint entries based on their names
       checkpointEntries.sort((a, b) => a.checkpoint.compareTo(b.checkpoint));
 
       if (finishLineTime != null) {
@@ -74,24 +72,21 @@ checkpoints.forEach((checkpoint, checkpointTime) {
       );
     });
 
-leaderboard.sort((a, b) {
+List<LeaderboardEntry> updatedLeaderboardData = leaderboard;
+updatedLeaderboardData.sort((a, b) {
   if (a.checkpointEntries.length != b.checkpointEntries.length) {
-    // Sort based on the number of checkpoint entries
-    return a.checkpointEntries.length.compareTo(b.checkpointEntries.length);
+    return b.checkpointEntries.length.compareTo(a.checkpointEntries.length);
   } else {
-    // If the number of checkpoint entries is the same, compare their last checkpoint times
     return a.lastCheckpointTime.compareTo(b.lastCheckpointTime);
   }
 });
 
-
-
-
     setState(() {
-      _leaderboardData = leaderboard;
+      _leaderboardData = updatedLeaderboardData;
     });
   });
 }
+
 
 
 @override
@@ -105,7 +100,9 @@ Widget build(BuildContext context) {
   return Scaffold(
     appBar: AppBar(
       title: Text('Leaderboard'),
+      backgroundColor: Color(0xFFFC766A),
     ),
+    backgroundColor:Color(0xFF3F51B5),
     body: RefreshIndicator(
       onRefresh: () async {
         await _fetchLeaderboardData();
@@ -151,23 +148,28 @@ Widget build(BuildContext context) {
             );
           }
 
-          return ListTile(
-            leading: rankWidget,
-            title: Text(entry.fullName),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: entry.checkpointEntries.map((checkpointEntry) {
-                return Text('${checkpointEntry.checkpoint}: ${checkpointEntry.checkpointTime}');
-              }).toList(),
+          return Card(
+            elevation: 2,
+            margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            child: ListTile(
+              leading: rankWidget,
+              title: Text(entry.fullName),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: entry.checkpointEntries.map((checkpointEntry) {
+                  return Text('${checkpointEntry.checkpoint}: ${checkpointEntry.checkpointTime}');
+                }).toList(),
+              ),
+              trailing: Text('Rank: $rank'),
+              contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             ),
-            trailing: Text('Rank: $rank'),
-            contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
           );
         },
       ),
     ),
   );
 }
+
 
 
 
@@ -197,4 +199,3 @@ class CheckpointEntry {
 
   CheckpointEntry({required this.checkpoint, required this.checkpointTime});
 }
-

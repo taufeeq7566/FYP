@@ -19,9 +19,13 @@ class _RegisterDialogState extends State<RegisterDialog> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _usernameController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   UserRole? _selectedRole;
   String _errorMessage = '';
+  bool _passwordObscure = true;
+  bool _confirmPasswordObscure = true;
+  bool _isLoading = false;
 
   DatabaseReference dbRef = FirebaseDatabase.instance.ref();
 
@@ -47,7 +51,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
               ),
               TextFormField(
                 controller: _usernameController,
-                decoration: InputDecoration(labelText: 'Full Name'),
+                decoration: InputDecoration(labelText: 'Full Name (Please Enter Your Name Accordingly)'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your full name';
@@ -56,16 +60,42 @@ class _RegisterDialogState extends State<RegisterDialog> {
                 },
               ),
               TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
+              controller: _passwordController,
+              obscureText: _passwordObscure,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                suffixIcon: IconButton(
+                    icon: Icon(_passwordObscure ? Icons.visibility : Icons.visibility_off),
+                    onPressed: () {
+                      setState(() {
+                        _passwordObscure = !_passwordObscure;
+                      });
+                    }
+                ),
+                ),
+            ),
+                  TextFormField(
+              controller: _confirmPasswordController,
+              obscureText: _confirmPasswordObscure,
+              decoration: InputDecoration(
+                labelText: 'Confirm Password',
+                suffixIcon: IconButton(
+                  icon: Icon(_confirmPasswordObscure ? Icons.visibility : Icons.visibility_off),
+                  onPressed: () {
+                    setState(() {
+                      _confirmPasswordObscure = !_confirmPasswordObscure;
+                    });
                   }
-                  return null;
-                },
+                ),
               ),
+              validator: (value) {
+                if(_passwordController.text != _confirmPasswordController.text) {
+                  return 'Incorrect Password';
+              }
+                return null;
+              }
+            ),
+            
               DropdownButtonFormField<UserRole>(
                 value: _selectedRole,
                 items: [
@@ -93,8 +123,38 @@ class _RegisterDialogState extends State<RegisterDialog> {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: _register,
+              onPressed: () async {
+                  setState(() {
+                    _isLoading = true;
+                  });
+                  
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => AlertDialog(
+                      content: Row(
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(width: 16),
+                          Text("Registering..."),
+                        ],
+                      ),
+                    ),
+                  );
+
+                  await _register();
+
+                  Navigator.pop(context); // Pop loading dialog
+                  
+                  setState(() {
+                    _isLoading = false;
+                  });
+
+                },
                 child: const Text('Register'),
+                style: ElevatedButton.styleFrom(
+                                    primary:Color(0xFFFC766A),
+                ),
               ),
               if (_errorMessage.isNotEmpty)
                 Text(

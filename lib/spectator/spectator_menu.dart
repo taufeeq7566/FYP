@@ -10,28 +10,51 @@ class SpectatorMenu extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Spectator Menu'),
-        backgroundColor: Colors.purple,
+        backgroundColor: Color(0xFFFC766A),
         actions: [
-          GestureDetector(
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => MyApp()),
-              );
-            },
-            child: Container(
-              padding: EdgeInsets.all(12.0),
-              child: Image.asset(
-                'lib/assets/picture_assets/logout.png',
-                width: 30.0,
-                height: 30.0,
-              ),
+GestureDetector(
+  onTap: () {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Logout Confirmation'),
+          content: Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+              },
+              child: Text('Cancel'),
             ),
-          ),
+            TextButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => MyApp()),
+                );
+              },
+              child: Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+  },
+  child: Container(
+    padding: EdgeInsets.all(12.0),
+    child: Image.asset(
+      'lib/assets/picture_assets/logout.png',
+      width: 45.0,
+      height: 45.0,
+    ),
+  ),
+),
+
         ],
       ),
       body: Container(
-        color: Colors.black,
+        color: Color(0xFF3F51B5),
         child: Center(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -90,7 +113,7 @@ class MenuButton extends StatelessWidget {
       child: Container(
 
         decoration: BoxDecoration(
-          color: Colors.purple,
+          color:  Color(0xFFFC766A),
           borderRadius: BorderRadius.circular(8.0),
         ),
         padding: EdgeInsets.all(12.0),
@@ -119,8 +142,3 @@ class MenuButton extends StatelessWidget {
     );
   }
 }
-
-
-
-
-

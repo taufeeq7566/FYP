@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
 import '../Forms/register.dart';
@@ -27,13 +28,15 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   UserRole? _selectedRole;
   String _errorMessage = '';
+  bool _obscureText = true;
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Login Screen'),
-        backgroundColor: Colors.purple,
+        backgroundColor:Color(0xFFFC766A),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -45,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
       body: Container(
-        color: Colors.black, // Set the background color to black
+        color: Color(0xFF3F51B5), // Set the background color to black
         child: SafeArea(
           child: Column(
             children: [
@@ -59,9 +62,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           height: 150,
                           alignment: Alignment.center,
                           child: Image.asset(
-                            'lib/assets/picture_assets/loginlogo.png',
-                            width: 250,
-                            height: 350,
+                            'lib/assets/picture_assets/loginlogo2.png',
+                            width: 400,
+                            height: 400,
                           ),
                         ),
                         SizedBox(height: 16),
@@ -106,18 +109,25 @@ class _LoginScreenState extends State<LoginScreen> {
                                     vertical: 16.0,
                                     horizontal: 16.0,
                                   ),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscureText ? Icons.visibility : Icons.visibility_off,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscureText = !_obscureText;
+                                      });
+                                    },
+                                  ),
                                 ),
-                                obscureText: true,
+                                obscureText: _obscureText,
                                 validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter your password';
-                                  }
-                                  return null;
+                                  // validator logic
                                 },
                               ),
                               SizedBox(height: 8),
-                              DropdownButtonFormField<UserRole>(
-                                value: _selectedRole,
+                              /*DropdownButtonFormField<UserRole>(
+                                                              value: _selectedRole,
                                 items: [
                                   DropdownMenuItem<UserRole>(
                                     value: UserRole.contestant,
@@ -152,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   }
                                   return null;
                                 },
-                              ),
+                              ),*/
                               SizedBox(height: 16),
                               SizedBox(
                                 width: 100,
@@ -165,8 +175,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   },
                                   child: const Text('Login'),
                                   style: ElevatedButton.styleFrom(
-                                    primary: Colors.purple,
-                                    textStyle: TextStyle(fontSize: 15),
+                                    primary:Color(0xFFFC766A),
+                                    textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.bold,),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8.0),
                                     ),
@@ -181,8 +191,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   onPressed: _register,
                                   child: const Text('Register'),
                                   style: ElevatedButton.styleFrom(
-                                    primary: Colors.purple,
-                                    textStyle: TextStyle(fontSize: 15),
+                                    primary:Color(0xFFFC766A),
+                                    textStyle: TextStyle(fontSize: 15,fontWeight: FontWeight.bold),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8.0),
                                     ),
@@ -212,52 +222,64 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<void> _login() async {
-    try {
-      final String email = _emailController.text.trim();
-      final UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: _passwordController.text,
-      );
+Future<void> _login() async {
+  try {
+    final String email = _emailController.text.trim();
+    final UserCredential userCredential =
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: email,
+      password: _passwordController.text,
+    );
 
-      final User? user = userCredential.user;
+    final User? user = userCredential.user;
 
-      if (user != null) {
-        // Logged in successfully, perform role-specific actions
-        switch (_selectedRole) {
-          case UserRole.contestant:
-            // Perform actions for contestant role
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => HomeScreen(
-                  checkpoints: widget.checkpoints,
-                  email: email,
-                ),
-              ),
-            );
-            break;
-          case UserRole.organizer:
-            // Perform actions for organizer role
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => OrganizerMenu(checkpoints: widget.checkpoints),
-              ),
-            );
-            break;
-        }
+    if (user != null) {
+      // Fetch user's role from the database
+      final roleSnapshot = await FirebaseDatabase.instance
+          .reference()
+          .child('users')
+          .child(user.uid)
+          .child('role')
+          .once();
+      final String? userRole = roleSnapshot.snapshot.value as String?;
 
-        // Clear the form
-        _formKey.currentState!.reset();
+      // Perform role-specific actions based on user's role
+      if (userRole == UserRole.contestant.toString()) {
+        // Perform actions for contestant role
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(
+              checkpoints: widget.checkpoints,
+              email: email,
+            ),
+          ),
+        );
+      } else if (userRole == UserRole.organizer.toString()) {
+        // Perform actions for organizer role
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OrganizerMenu(checkpoints: widget.checkpoints),
+          ),
+        );
+      } else {
+        // Invalid role
+        setState(() {
+          _errorMessage = 'Invalid role';
+        });
       }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = e.message!;
-      });
+
+      // Clear the form
+      _formKey.currentState!.reset();
     }
+  } on FirebaseAuthException catch (e) {
+    setState(() {
+      _errorMessage = e.message!;
+    });
   }
+}
+
 
   Future<void> _register() async {
     showDialog(

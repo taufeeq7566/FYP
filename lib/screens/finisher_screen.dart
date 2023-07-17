@@ -19,51 +19,51 @@ class _FinisherScreenState extends State<FinisherScreen> {
     _fetchFinishers();
   }
 
-  Future<void> _fetchFinishers() async {
-    DatabaseReference checkpointsRef = _databaseReference.child('checkpoints');
-    DataSnapshot checkpointSnapshot =
-        (await checkpointsRef.once()).snapshot;
+ Future<void> _fetchFinishers() async {
+  DatabaseReference checkpointsRef = _databaseReference.child('checkpoints');
+  DataSnapshot checkpointSnapshot = (await checkpointsRef.once()).snapshot;
 
-    if (checkpointSnapshot.value == null) {
-      return;
-    }
-
-    Map<dynamic, dynamic> checkpoints =
-        checkpointSnapshot.value as Map<dynamic, dynamic>;
-    int numCheckpoints = checkpoints.length;
-
-    DatabaseReference leaderboardRef = _databaseReference.child('leaderboard');
-    DataSnapshot leaderboardSnapshot =
-        (await leaderboardRef.once()).snapshot;
-
-    if (leaderboardSnapshot.value == null) {
-      return;
-    }
-
-    Map<dynamic, dynamic> leaderboardData =
-        leaderboardSnapshot.value as Map<dynamic, dynamic>;
-
-    leaderboardData.forEach((key, value) {
-      String fullName = key;
-      Map<dynamic, dynamic> userCheckpoints = value['checkpoints'];
-
-      if (userCheckpoints.length == numCheckpoints) {
-        _finishers.add(fullName);
-      }
-    });
-
-    setState(() {
-      // Update the state to trigger a rebuild with the fetched finishers
-      _finishers = _finishers;
-    });
+  if (checkpointSnapshot.value == null) {
+    return;
   }
+
+  Map<dynamic, dynamic> checkpoints = checkpointSnapshot.value as Map<dynamic, dynamic>;
+  int numCheckpoints = checkpoints.length;
+
+  DatabaseReference leaderboardRef = _databaseReference.child('leaderboard');
+  DataSnapshot leaderboardSnapshot = (await leaderboardRef.once()).snapshot;
+
+  if (leaderboardSnapshot.value == null) {
+    return;
+  }
+
+  Map<dynamic, dynamic>? leaderboardData = leaderboardSnapshot.value as Map<dynamic, dynamic>?;
+
+  if (leaderboardData == null) {
+    return;
+  }
+
+  leaderboardData.forEach((key, value) {
+    String fullName = key;
+    Map<dynamic, dynamic> userCheckpoints = value['checkpoints'];
+
+    if (userCheckpoints.length == numCheckpoints) {
+      _finishers.add(fullName);
+    }
+  });
+
+  setState(() {
+    _finishers = _finishers;
+  });
+}
+
 
 @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Finishers'),
-        backgroundColor: Colors.purple,
+        backgroundColor:Color(0xFFFC766A),
       ),
       body: Stack(
         children: [

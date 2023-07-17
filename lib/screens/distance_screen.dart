@@ -45,7 +45,7 @@ class _DistanceScreenState extends State<DistanceScreen> {
     _retrieveCheckpoints();
     _getCurrentLocation();
     _retrieveFullName();
-    _timer = Timer.periodic(Duration(seconds: 2), (_) => _calculateDistance());
+    _timer = Timer.periodic(Duration(milliseconds: 1), (_) => _calculateDistance());
   }
 
   @override
@@ -258,91 +258,139 @@ class _DistanceScreenState extends State<DistanceScreen> {
     return '$minutes:$seconds:$milliseconds';
   }
 
-  @override
-  Widget build(BuildContext context) {
-    String elapsedFormattedTime = _formatDuration(stopwatch.elapsed);
+@override
+Widget build(BuildContext context) {
+  String elapsedFormattedTime = _formatDuration(stopwatch.elapsed);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Distance Screen'),
-      ),
-      body: Center(
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Distance Screen'),
+      backgroundColor: Color(0xFFFC766A),
+    ),
+    body: Container(
+      color: Color(0xFF3F51B5),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Elapsed Time:',
-              style: TextStyle(fontSize: 18),
-            ),
-            Text(
-              elapsedFormattedTime,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Current Location:',
-              style: TextStyle(fontSize: 18),
-            ),
-            SizedBox(height: 10),
-            Text(
-              'Latitude: ${_currentPosition.latitude}',
-              style: TextStyle(fontSize: 16),
-            ),
-            Text(
-              'Longitude: ${_currentPosition.longitude}',
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Email:',
-              style: TextStyle(fontSize: 18),
-            ),
-            Text(
-              widget.userEmail,
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Full Name:',
-              style: TextStyle(fontSize: 18),
-            ),
-            Text(
-              _userFullName,
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Distances to Checkpoints:',
-              style: TextStyle(fontSize: 18),
-            ),
-            if (checkpoints.isNotEmpty && distances.isNotEmpty)
-              for (int i = 0; i < checkpoints.length; i++) ...[
-                SizedBox(height: 10),
-                Text(
-                  '${checkpoints[i].name}: ${distances[i].toStringAsFixed(2)} meters',
-                  style: TextStyle(fontSize: 16),
-                ),
-                Text(
-                  'Elapsed Time: ${_formatDuration(checkpoints[i].stopwatchTime ?? stopwatch.elapsed)}',
-                  style: TextStyle(fontSize: 14),
-                ),
-              ]
-            else
-              Container(
-                child: Text(
-                  'No checkpoints or distances available.',
-                  style: TextStyle(fontSize: 16),
-                ),
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Elapsed Time:',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    elapsedFormattedTime,
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ],
               ),
+            ),
+            SizedBox(height: 20),
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Current Location:',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Latitude: ${_currentPosition.latitude}',
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                  Text(
+                    'Longitude: ${_currentPosition.longitude}',
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 20),
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Email:',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    widget.userEmail,
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 20),
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Full Name:',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    _userFullName,
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 20),
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Distances to Checkpoints:',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                  SizedBox(height: 10),
+                  if (checkpoints.isNotEmpty && distances.isNotEmpty)
+                    for (int i = 0; i < checkpoints.length; i++) ...[
+                      SizedBox(height: 10),
+                      Text(
+                        '${checkpoints[i].name}: ${distances[i].toStringAsFixed(2)} meters',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                      Text(
+                        'Elapsed Time: ${_formatDuration(checkpoints[i].stopwatchTime ?? stopwatch.elapsed)}',
+                        style: TextStyle(fontSize: 14, color: Colors.white),
+                      ),
+                    ]
+                  else
+                    Container(
+                      child: Text(
+                        'No checkpoints or distances available.',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _getCurrentLocation,
-        child: const Icon(Icons.location_searching),
-      ),
-    );
-  }
+    ),
+  );
+}
+
+
 }
 
 class DistanceCheckpoint {

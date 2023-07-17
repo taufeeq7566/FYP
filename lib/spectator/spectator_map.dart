@@ -79,7 +79,7 @@ class _SpectatorMapScreenState extends State<SpectatorMapScreen> {
     });
   }
 
- void _onThemeChanged(String? value) async {
+void _onThemeChanged(String? value) async {
   if (value != null) {
     setState(() {
       selectedTheme = value;
@@ -128,11 +128,7 @@ class _SpectatorMapScreenState extends State<SpectatorMapScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            Icon(
-              Icons.map,
-              size: 24,
-            ),
-            SizedBox(width: 8),
+
             Text(
               'Spectator Map',
               style: TextStyle(
@@ -141,7 +137,7 @@ class _SpectatorMapScreenState extends State<SpectatorMapScreen> {
             ),
           ],
         ),
-        backgroundColor: Colors.purple,
+        backgroundColor: Color(0xFFFC766A),
         actions: [
           Container(
             padding: EdgeInsets.only(right: 16),
@@ -149,7 +145,7 @@ class _SpectatorMapScreenState extends State<SpectatorMapScreen> {
               child: DropdownButton<String>(
                 value: selectedTheme,
                 onChanged: _onThemeChanged,
-                dropdownColor: Colors.purple,
+                dropdownColor: Color(0xFFFC766A),
                 items: themeOptions.map((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
@@ -157,8 +153,8 @@ class _SpectatorMapScreenState extends State<SpectatorMapScreen> {
                       children: [
                         Image.asset(
                           'lib/assets/picture_assets/theme.png',
-                          width: 20,
-                          height: 20,
+                          width: 31,
+                          height: 31,
                         ),
                         SizedBox(width: 8),
                         Text(
